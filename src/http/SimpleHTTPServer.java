@@ -1,6 +1,8 @@
 package http;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 
 import processing.core.PApplet;
 
@@ -11,6 +13,8 @@ public class SimpleHTTPServer {
 
 	public static PApplet parent;
 	HttpServer server;
+	
+	SimpleFileHandler indexFileHandler;
 
 	/**
 	 * Creates a HTTPServer listening on port 8000
@@ -30,7 +34,8 @@ public class SimpleHTTPServer {
 		SimpleFileHandler.parent = parent;
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
-			createContext("", new SimpleFileHandler("index.html"));
+			indexFileHandler = new SimpleFileHandler("index.html");
+			createContext("", indexFileHandler);
 			server.start();
 			System.out.println("SimpleHTTPServer running on port 8000");
 		} catch (Exception exc) {
@@ -46,14 +51,6 @@ public class SimpleHTTPServer {
 		server.stop(0);
 	}
 
-	/**
-	 * Makes a file available on the server(html,css or js)
-	 * @param path url path
-	 * @param fileName file in the data folder to serve
-	 */
-	public void serve(String path,String fileName) {
-		server.createContext(path, new SimpleFileHandler(fileName));
-	}
 	
 	/**
 	 * Makes a file available on the server(html,css or js).
@@ -61,8 +58,31 @@ public class SimpleHTTPServer {
 	 * @param fileName file in the data folder to serve
 	 */
 	public void serve(String fileName) {
-		server.createContext("/"+fileName, new SimpleFileHandler(fileName));
+		serve("/"+fileName, fileName);
 	}
+	
+	/**
+	 * Makes a file available on the server(html,css or js)
+	 * @param path url path
+	 * @param fileName file in the data folder to serve
+	 */
+	public void serve(String path,String fileName) {
+		server.createContext("/"+path, new SimpleFileHandler(fileName));
+	}
+
+	/**
+	 * Makes a file available on the server(html,css or js)
+	 * @param path url path
+	 * @param fileName file in the data folder to serve
+	 * @param callbackFunctionName name of the function
+	 */
+	public void serve(String path,String fileName, String callbackFunctionName) {
+		Method callbackMethod = getCallbackMethod(callbackFunctionName);
+		SimpleFileHandler handler = new SimpleFileHandler(fileName);
+		if(callbackMethod != null)
+			handler.setCallbackMethod(callbackMethod);
+		server.createContext("/"+path, handler);
+	}	
 	
 	/**
 	 * Makes SOMETHING available on the server und a sepecific url.
@@ -72,6 +92,27 @@ public class SimpleHTTPServer {
 	 */
 	public void createContext(String fileName, HttpHandler handler) {
 		server.createContext("/"+fileName, handler);
+	}
+
+	public Method getCallbackMethod(String callbackFunctionName) {
+		Class<? extends PApplet> clazz = parent.getClass();
+		try {
+			Method method = clazz.getDeclaredMethod(callbackFunctionName,new Class<?>[]{String.class,HashMap.class});
+			return method;
+		} catch (NoSuchMethodException | SecurityException e) {
+			System.err.println("No such Method: "+callbackFunctionName +" in PApplet");
+		}
+		return null;
+	}
+
+	public void setIndexCallback(String callbackFunctionName) {
+		Class<? extends PApplet> clazz = parent.getClass();
+		try {
+			Method method = clazz.getDeclaredMethod(callbackFunctionName,new Class<?>[]{String.class,HashMap.class});
+			indexFileHandler.setCallbackMethod(method);
+		} catch (NoSuchMethodException | SecurityException e) {
+			System.err.println("No such Method: "+callbackFunctionName +" in PApplet");
+		}
 	}
 
 }

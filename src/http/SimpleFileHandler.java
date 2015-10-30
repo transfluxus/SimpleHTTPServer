@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 import processing.core.PApplet;
 
@@ -14,9 +18,12 @@ import com.sun.net.httpserver.HttpHandler;
 
 class SimpleFileHandler implements HttpHandler {
 
+	public static PApplet parent;
+
 	private final String fileName;
 	private String contentType;
-	public static PApplet parent;
+	private Method callbackMethod;
+	private boolean callbackMethodSet;
 
 	public SimpleFileHandler(String fileName) {
 		if(!parent.dataFile(fileName).exists()) {
@@ -56,9 +63,7 @@ class SimpleFileHandler implements HttpHandler {
 	}
 
 	public void handle(HttpExchange t) throws IOException {
-		// println(t.getRequestMethod()+" "+t.getRequestURI() );
-		// for(String s : t.getRequestHeaders().keySet())
-		// println("    ",s,t.getRequestHeaders().get(s));
+		//PApplet.println("handle: "+ t.getRequestURI().toString());
 		byte[] response = getResponseBytes();
 		if (contentType != null) {
 			Headers headers = t.getResponseHeaders();
@@ -68,5 +73,50 @@ class SimpleFileHandler implements HttpHandler {
 		OutputStream os = t.getResponseBody();
 		os.write(response, 0, response.length);
 		os.close();
+		
+		if(callbackMethodSet) {
+			//PApplet.println("callback!");
+			String uri = t.getRequestURI().toString();
+			String query = t.getRequestURI().getQuery();
+			//PApplet.println("query:",query);
+			if(query == null) {
+				System.err.println("URI:" +uri + " called without query parameters. Callback method is not called");
+			}
+			Map<String, String> map = queryToMap(query);
+			//PApplet.println("map:",map);
+			try {
+				callbackMethod.invoke(parent, new Object[]{uri,map});
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			}
+		}
 	}
+
+	public void setCallbackMethod(Method callbackMethod) {
+		callbackMethodSet = true;
+		this.callbackMethod = callbackMethod;
+	}
+	
+	  /**
+	   * returns the url parameters in a map
+	   * @param query
+	   * @return map
+	   */
+	  public Map<String, String> queryToMap(String query){
+	    Map<String, String> result = new HashMap<String, String>();
+	    for (String param : query.split("&")) {
+	        String pair[] = param.split("=");
+	        if (pair.length>1) {
+	            result.put(pair[0], pair[1]);
+	        }else{
+	            result.put(pair[0], "");
+	        }
+	    }
+	    return result;
+	  }
+	  
 }
