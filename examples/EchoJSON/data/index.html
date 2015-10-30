@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<header>
+		<style type="text/css">
+		#input {
+			position: absolute;
+			top:200px;
+			text-align: center;
+			font-size: 20px;
+			width:100%;
+		}
+		#output {
+			position: absolute;
+			top:300px;
+			text-align: center;
+			font-size: 20px;
+			width:100%;
+		}
+		</style>
+	</header>
+	<body>
+		<div id="input">
+			
+		</div>
+		<div id="output">
+			
+		</div>
+	<script type="text/javascript">
+		setInterval(function() {
+			var xhr = new XMLHttpRequest();
+			xhr.open('PUT', 'echo');
+			xhr.setRequestHeader('Content-Type', 'application/json');
+			xhr.onload = function() {
+			    if (xhr.status === 200) {
+			        var response = JSON.parse(xhr.responseText);
+			        document.getElementById("output").innerHTML = "output: "+response.responseNumber;
+			    }
+			};
+			var randomNumber = parseInt(Math.random()*10);
+			document.getElementById("input").innerHTML = "input: "+randomNumber;
+			document.getElementById("output").innerHTML = "output:";
+			xhr.send('{requestNumber:'+randomNumber+'}');	
+		},1000);
+
+	</script>
+	</body>
+</html>
