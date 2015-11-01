@@ -21,7 +21,7 @@ class SimpleFileHandler implements HttpHandler {
 	public static PApplet parent;
 
 	private final String fileName;
-	private String contentType;
+	private final String contentType;
 	private Method callbackMethod;
 	private boolean callbackMethodSet;
 
@@ -33,12 +33,14 @@ class SimpleFileHandler implements HttpHandler {
 		if (fileName.endsWith(".html")) {
 			this.contentType = "text/html";
 		} else if (fileName.endsWith(".css")) {
+			//System.out.println(fileName+" type:CSS");
 			this.contentType = "text/css";
 		} else if (fileName.endsWith(".js")) {
 			this.contentType = "text/javascript";
 		} else {
 			System.out
 					.println("content type could not be derrived. Better use SimpleFileHandler(String fileName, String contentType)");
+			this.contentType = "text/html";
 		}
 	}
 
@@ -68,6 +70,7 @@ class SimpleFileHandler implements HttpHandler {
 		if (contentType != null) {
 			Headers headers = t.getResponseHeaders();
 			headers.add("Content-Type", contentType);
+			//System.out.println("serving "+fileName +" as " +contentType);
 		}
 		t.sendResponseHeaders(200, response.length);
 		OutputStream os = t.getResponseBody();

@@ -58,7 +58,7 @@ public class SimpleHTTPServer {
 	 * @param fileName file in the data folder to serve
 	 */
 	public void serve(String fileName) {
-		serve("/"+fileName, fileName);
+		serve(fileName, fileName);
 	}
 	
 	/**
