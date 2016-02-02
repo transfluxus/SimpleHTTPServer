@@ -11,7 +11,7 @@ import com.sun.net.httpserver.HttpServer;
 
 public class SimpleHTTPServer {
 
-	public static PApplet parent;
+	protected static PApplet parent;
 	HttpServer server;
 	
 	SimpleFileHandler indexFileHandler;
@@ -115,4 +115,7 @@ public class SimpleHTTPServer {
 		}
 	}
 
+	public PApplet getParent() {
+		return parent;
+	}
 }
