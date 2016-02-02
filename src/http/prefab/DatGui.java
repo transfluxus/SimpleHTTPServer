@@ -38,6 +38,13 @@ public class DatGui {
 		classGuis.add(cg);
 		return cg;
 	}
+	
+	public ClassGui addToUpdate(Object obj) {
+		Class<?> clazz = obj.getClass();
+		ClassGui cg = new ClassGui(clazz);
+		classGuis.add(cg);
+		return cg;	
+	}
 
 	BufferedReader templateFileReader() {
 		try {
