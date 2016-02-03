@@ -47,6 +47,7 @@ public class ValueGuiElement extends GuiElement {
 	
 	public String build(String addTo,String objectName) {
 		StringBuilder sb= new StringBuilder(addTo+".add("+objectName+", '"+name+"')");
+		String className = objectName.substring(0,objectName.length()-3);
 		// thats the way to get if a value is not NaN
 		if(min == min) {
 			sb.append(".min("+ (type == TYPE.INT ? (int)min : min) + ")");
@@ -57,7 +58,7 @@ public class ValueGuiElement extends GuiElement {
 		if (step == step) {
 			sb.append(".step("+ (type == TYPE.INT ? ""+(int)step : step) + ")");
 		}
-		sb.append(".onChange(function(value) { addToUpdate('"+objectName+"','"+name+"',"+objectName+"."+name+"); });");
+		sb.append(".onChange(function(value) { addToUpdate('"+className+"','"+name+"',"+objectName+"."+name+"); });");
 		return sb.toString();
 	}
 }

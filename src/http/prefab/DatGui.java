@@ -17,7 +17,9 @@ public class DatGui {
 	final String templateFileLocation;
 
 	List<ClassGui> classGuis = new ArrayList<>();
-	int sendDelay = 40;
+	int sendDelay = 100;
+	
+	private AutoUpdateContext updateContext;
 
 	String nl = System.getProperty("line.separator");
 	StringBuilder builder;
@@ -26,6 +28,7 @@ public class DatGui {
 	public DatGui(SimpleHTTPServer server) {
 		this.server = Optional.of(server);
 		this.templateFileLocation = server.getParent().sketchPath() + "/data/templates.txt";
+		updateContext = new AutoUpdateContext(server.getParent());
 	}
 
 	public DatGui(String templateFileLocation) {
@@ -40,9 +43,8 @@ public class DatGui {
 	}
 	
 	public ClassGui addToUpdate(Object obj) {
-		Class<?> clazz = obj.getClass();
-		ClassGui cg = new ClassGui(clazz);
-		classGuis.add(cg);
+		ClassGui cg = add(obj.getClass());
+		updateContext.add(obj,cg);
 		return cg;	
 	}
 
@@ -114,6 +116,7 @@ public class DatGui {
 			appendToOutput("window.onload = function() {");
 			classGuis.stream().forEach(cl -> appendToOutput(cl.build()));
 			appendToOutput("};");
+			appendToOutput("setInterval(autoSend,"+sendDelay+");");
 			appendToOutput("</script>");
 
 			if (completeHTML) {
@@ -148,5 +151,9 @@ public class DatGui {
 
 	public void setSendDelay(int millis) {
 		sendDelay = millis;
+	}
+
+	public AutoUpdateContext getUpdateContext() {
+		return updateContext;
 	}
 }

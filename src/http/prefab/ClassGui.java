@@ -1,10 +1,13 @@
 package http.prefab;
 
+import http.prefab.guiElement.BangGuiElement;
+import http.prefab.guiElement.BoolGuiElement;
 import http.prefab.guiElement.GuiElement;
 import http.prefab.guiElement.ValueGuiElement;
 import http.prefab.guiElement.ValueGuiElement.TYPE;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +17,8 @@ import java.util.Optional;
 public class ClassGui {
 
 	private final Class<?> clazz;
+	
+	private final String name;
 
 	public boolean isOpen = true;
 
@@ -23,6 +28,7 @@ public class ClassGui {
 
 	public ClassGui(Class<?> clazz) {
 		this.clazz = clazz;
+		this.name = clazz.getSimpleName() ;
 		allPublics();
 	}
 
@@ -32,7 +38,7 @@ public class ClassGui {
 		try {
 			tempObj = Optional.of(clazz.newInstance());
 		} catch (InstantiationException | IllegalAccessException e) {
-			System.out.println("The class: " + clazz.getSimpleName()
+			System.out.println("The class: " + name
 					+ " should provide a public default constructor for the default values");
 		}
 		for (Field field : fields) {
@@ -43,15 +49,16 @@ public class ClassGui {
 			try {
 				if (field.getType().equals(Integer.TYPE)) {
 					String defaultValue = "0";
-					if (tempObj.isPresent())
-						defaultValue = String.valueOf(field.getInt(tempObj.get()));
+					defaultValue = String.valueOf(field.getInt(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
 				} else if (field.getType().equals(Float.TYPE)) {
 					String defaultValue = "0.1";
 					defaultValue = String.valueOf(field.getFloat(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
 				} else if (field.getType().equals(Boolean.TYPE)) {
-
+					String defaultValue = "false";
+					defaultValue = String.valueOf(field.getBoolean(tempObj.get()));
+					element = Optional.of(new BoolGuiElement(name,  defaultValue));
 				}
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
@@ -62,6 +69,15 @@ public class ClassGui {
 		}
 	}
 
+	public void addMethodTrigger(String functionName) {
+		try {
+			clazz.getMethod(functionName, new Class<?>[]{});
+			guiElements.add(new BangGuiElement(name,functionName));
+		} catch (NoSuchMethodException | SecurityException e) {
+			System.err.println("Cannot find or acces method: "+functionName+ " in class: "+name);
+		}
+	}
+	
 	public void remove(String fieldName) {
 		for (Iterator<GuiElement> iter = guiElements.iterator(); iter.hasNext();) {
 			if (iter.next().name.equals(fieldName)) {
@@ -81,14 +97,13 @@ public class ClassGui {
 	}
 
 	public String buildFunction() {
-		StringBuilder sb = new StringBuilder("var " + clazz.getSimpleName() + " = function() {" + nl);
+		StringBuilder sb = new StringBuilder("var " + name + " = function() {" + nl);
 		guiElements.stream().forEach(elem -> sb.append("\t" + elem.preDefBuild() + nl));
 		sb.append("};" + nl);
 		return sb.toString();
 	}
 
 	public String build() {
-		String name = clazz.getSimpleName();
 		String folderName = name + "Folder";
 		String objName = name + "Obj";
 
@@ -99,5 +114,9 @@ public class ClassGui {
 			sb.append("\t" + folderName + ".open();" + nl);
 		}
 		return sb.toString();
+	}
+
+	public String getName() {
+		return name;
 	}
 }
