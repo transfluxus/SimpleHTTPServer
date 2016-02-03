@@ -38,7 +38,7 @@ public class ValueGuiElement extends GuiElement {
 				""+Integer.parseInt(defaultValue) : 
 					""+Float.parseFloat(defaultValue));
 		if(type == TYPE.FLOAT && Float.parseFloat(defaultValue) % 1.0 == 0) {
-			System.err.println("Better give float values a non integer default value. otherwise dat.gui will display it as an integer");
+			System.err.println("Better give float value: '"+ name+"' a non integer default value("+defaultValue+"). otherwise dat.gui will display it as an integer");
 		}
 		String ret =  "this."+name+ " = " +val+";";
 		return ret;

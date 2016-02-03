@@ -17,8 +17,8 @@ import java.util.Optional;
 public class ClassGui {
 
 	private final Class<?> clazz;
-	
-	private final String name;
+
+	private String name;
 
 	public boolean isOpen = true;
 
@@ -26,39 +26,54 @@ public class ClassGui {
 
 	static String nl = System.getProperty("line.separator");
 
-	public ClassGui(Class<?> clazz) {
+	private final Optional<Object> relatedObject;
+
+	public ClassGui(Class<?> clazz, Object obj, int id) {
 		this.clazz = clazz;
-		this.name = clazz.getSimpleName() ;
+		this.name = clazz.getSimpleName() + id;
+		//System.out.println("CG: "+name);
+		if (obj != null)
+			relatedObject = Optional.of(obj);
+		else
+			relatedObject = Optional.empty();
 		allPublics();
 	}
 
 	public void allPublics() {
 		Field[] fields = clazz.getDeclaredFields();
-		Optional<Object> tempObj = null;
-		try {
-			tempObj = Optional.of(clazz.newInstance());
-		} catch (InstantiationException | IllegalAccessException e) {
-			System.out.println("The class: " + name
-					+ " should provide a public default constructor for the default values");
+		Optional<Object> tempObj = Optional.empty();
+		if (relatedObject.isPresent())
+			tempObj = relatedObject;
+		else {
+			try {
+				tempObj = Optional.of(clazz.newInstance());
+			} catch (InstantiationException | IllegalAccessException e) {
+				System.out.println(
+						"The class: " + name + " should provide a public default constructor for the default values");
+			}
 		}
 		for (Field field : fields) {
 			if (!Modifier.isPublic(field.getModifiers()))
 				continue;
 			String name = field.getName();
 			Optional<? extends GuiElement> element = Optional.empty();
+			//System.out.println(field);
 			try {
 				if (field.getType().equals(Integer.TYPE)) {
 					String defaultValue = "0";
-					defaultValue = String.valueOf(field.getInt(tempObj.get()));
+					if(tempObj.isPresent())
+						defaultValue = String.valueOf(field.getInt(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
 				} else if (field.getType().equals(Float.TYPE)) {
 					String defaultValue = "0.1";
-					defaultValue = String.valueOf(field.getFloat(tempObj.get()));
+					if(tempObj.isPresent())
+						defaultValue = String.valueOf(field.getFloat(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
 				} else if (field.getType().equals(Boolean.TYPE)) {
 					String defaultValue = "false";
-					defaultValue = String.valueOf(field.getBoolean(tempObj.get()));
-					element = Optional.of(new BoolGuiElement(name,  defaultValue));
+					if(tempObj.isPresent())
+						defaultValue = String.valueOf(field.getBoolean(tempObj.get()));
+					element = Optional.of(new BoolGuiElement(name, defaultValue));
 				}
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
@@ -71,13 +86,13 @@ public class ClassGui {
 
 	public void addMethodTrigger(String functionName) {
 		try {
-			clazz.getMethod(functionName, new Class<?>[]{});
-			guiElements.add(new BangGuiElement(name,functionName));
+			clazz.getMethod(functionName, new Class<?>[] {});
+			guiElements.add(new BangGuiElement(name, functionName));
 		} catch (NoSuchMethodException | SecurityException e) {
-			System.err.println("Cannot find or acces method: "+functionName+ " in class: "+name);
+			System.err.println("Cannot find or acces method: " + functionName + " in class: " + name);
 		}
 	}
-	
+
 	public void remove(String fieldName) {
 		for (Iterator<GuiElement> iter = guiElements.iterator(); iter.hasNext();) {
 			if (iter.next().name.equals(fieldName)) {
@@ -119,4 +134,9 @@ public class ClassGui {
 	public String getName() {
 		return name;
 	}
+
+	public Class<?> getClazz() {
+		return clazz;
+	}
+	
 }

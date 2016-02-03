@@ -38,15 +38,28 @@ public class DatGui {
 	}
 
 	public ClassGui add(Class<?> clazz) {
-		ClassGui cg = new ClassGui(clazz);
+		return add(clazz,null);
+	}
+	
+	public ClassGui add(Class<?> clazz,Object relatedObject) {
+		int id = getId(clazz);
+		ClassGui cg = new ClassGui(clazz,relatedObject,id);
 		classGuis.add(cg);
 		return cg;
 	}
-	
+
 	public ClassGui addToUpdate(Object obj) {
-		ClassGui cg = add(obj.getClass());
+		ClassGui cg = add(obj.getClass(),obj);
 		updateContext.add(obj,cg);
 		return cg;	
+	}
+
+	private int getId(Class<?> clazz) {
+		//System.out.println("checking: "+clazz);
+		//classGuis.stream().forEach(cg -> System.out.println(cg.getClazz().getName()));
+		//classGuis.stream().forEach(cg -> System.out.println(cg.getClazz().getName().equals(clazz.getName())));
+		int id = (int) classGuis.stream().filter(cg -> cg.getClazz().equals(clazz)).count() + 1;
+		return id;
 	}
 
 	BufferedReader templateFileReader() {

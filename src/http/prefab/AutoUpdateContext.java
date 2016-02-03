@@ -45,6 +45,7 @@ public class AutoUpdateContext extends ResponseBuilder {
 						} else if (field.getType() == Float.TYPE) { // float
 							float value = jsonClazz.getFloat(fieldName);
 							field.set(updateObject, value);
+							//System.out.println("2-setting float to: "+value);
 						} else if (field.getType() == Boolean.TYPE) {
 							boolean value = jsonClazz.getBoolean(fieldName);
 							field.setBoolean(updateObject, value);
