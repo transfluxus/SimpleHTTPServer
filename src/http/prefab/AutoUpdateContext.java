@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-
 import http.ResponseBuilder;
 import processing.core.PApplet;
 import processing.data.JSONObject;

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import http.DynamicResponseHandler;
 import http.SimpleHTTPServer;
 
 public class DatGui {
@@ -155,5 +156,9 @@ public class DatGui {
 
 	public AutoUpdateContext getUpdateContext() {
 		return updateContext;
+	}
+
+	public DynamicResponseHandler getHandler() {
+		return new DynamicResponseHandler(getUpdateContext(), "application/json");
 	}
 }

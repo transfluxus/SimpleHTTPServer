@@ -13,6 +13,8 @@ public class Tester extends PApplet {
 	SimpleHTTPServer server;
 	DatGui gui;
 	TestClass tc;
+	
+	public int red,green,blue;
 
 	public void settings() {
 		size(600, 200);
@@ -26,36 +28,20 @@ public class Tester extends PApplet {
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);
 		cg.addMethodTrigger("reset");
-
+		ClassGui cg2 = gui.addToUpdate(this);
+		cg2.getValueElement("red").min(0).max(255);
+		cg2.getValueElement("green").min(0).max(255);
+		cg2.getValueElement("blue").min(0).max(255);
 		// gui.add(tc.getClass());
 		gui.build();
-		DynamicResponseHandler responder = new DynamicResponseHandler(gui.getUpdateContext(), "application/json");
-		server.createContext("datgui", responder);
-
-		// server.createContext("datgui", responder);
-	}
-
-	class JSONEcho extends ResponseBuilder {
-
-		/**
-		 * This abstract function needs to be overwritten. In this example the
-		 * json request needs to include a requestNumber. It then returns the
-		 * same JSONObject but adds responseNumber,which is the double of
-		 * requestNumber
-		 */
-		public String getResponse(String requestBody) {
-			JSONObject json = parseJSONObject(requestBody);
-			// int number = json.getInt("requestNumber");
-			// json.setInt("responseNumber", number*2);
-			System.out.println(json);
-			return json.toString();
-		}
+		DynamicResponseHandler handler = gui.getHandler();
+		server.createContext("datgui", handler);
 	}
 
 	float x = 0;
 
 	public void draw() {
-		background(0);
+		background(red,green,blue);
 		if (tc.red)
 			fill(255, 0, 0);
 		else
