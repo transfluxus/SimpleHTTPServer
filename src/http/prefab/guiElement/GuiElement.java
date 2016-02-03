@@ -1,7 +1,9 @@
 package http.prefab.guiElement;
 
-public abstract class GuiElement {
+import java.lang.reflect.Field;
+import java.util.Optional;
 
+public abstract class GuiElement {
 
 	public final String name;
 		
@@ -18,6 +20,8 @@ public abstract class GuiElement {
 		this.defaultValue = defaultValue;
 	}
 	
+	abstract public Optional<GuiElement> FromField(Field field,Object obj);
+
 	abstract public String preDefBuild();
 
 	abstract public String build(String addTo,String objectName);

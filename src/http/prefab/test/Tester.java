@@ -40,6 +40,11 @@ public class Tester extends PApplet {
 		cg2.getValueElement("red").min(0).max(255);
 		cg2.getValueElement("green").min(0).max(255);
 		cg2.getValueElement("blue").min(0).max(255);
+		
+		
+		TestClass2 arrayObj = new TestClass2();
+		ClassGui tc1 = gui.addToUpdate(arrayObj);
+		
 		// gui.add(tc.getClass());
 		gui.build();
 		DynamicResponseHandler handler = gui.getHandler();

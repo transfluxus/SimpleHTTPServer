@@ -37,18 +37,21 @@ public class AutoUpdateContext extends ResponseBuilder {
 					// System.out.println("editing field: "+fieldName);
 					try {
 						Field field = updateObject.getClass().getField(fieldName);
+						Class<?> type = field.getType();
 						// System.out.println(field.getType().getName());
-						if (field.getType() == Integer.TYPE) {
+						if (type == Integer.TYPE) {
 							int value = jsonClazz.getInt(fieldName);
 							// System.out.println("setting value to: "+value);
 							field.set(updateObject, value);
-						} else if (field.getType() == Float.TYPE) { // float
+						} else if (type == Float.TYPE) { // float
 							float value = jsonClazz.getFloat(fieldName);
 							field.set(updateObject, value);
 							//System.out.println("2-setting float to: "+value);
-						} else if (field.getType() == Boolean.TYPE) {
+						} else if (type == Boolean.TYPE) {
 							boolean value = jsonClazz.getBoolean(fieldName);
 							field.setBoolean(updateObject, value);
+						} else if(type.isArray() && type.getComponentType().equals(String.class)) {
+							
 						}
 					} catch (NoSuchFieldException | SecurityException e) {
 						System.err.println("No acces to the field: " + fieldName + " of class " + clazzName);

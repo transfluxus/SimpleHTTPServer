@@ -1,18 +1,19 @@
 package http.prefab;
 
-import http.prefab.guiElement.BangGuiElement;
-import http.prefab.guiElement.BoolGuiElement;
-import http.prefab.guiElement.GuiElement;
-import http.prefab.guiElement.ValueGuiElement;
-import http.prefab.guiElement.ValueGuiElement.TYPE;
-
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
+import http.prefab.guiElement.BangGuiElement;
+import http.prefab.guiElement.BoolGuiElement;
+import http.prefab.guiElement.GuiElement;
+import http.prefab.guiElement.StringListElement;
+import http.prefab.guiElement.ValueGuiElement;
+import http.prefab.guiElement.ValueGuiElement.TYPE;
 
 public class ClassGui {
 
@@ -59,21 +60,37 @@ public class ClassGui {
 			Optional<? extends GuiElement> element = Optional.empty();
 			//System.out.println(field);
 			try {
-				if (field.getType().equals(Integer.TYPE)) {
+				Class<?> type = field.getType();
+				if (type.equals(Integer.TYPE)) {
 					String defaultValue = "0";
 					if(tempObj.isPresent())
 						defaultValue = String.valueOf(field.getInt(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
-				} else if (field.getType().equals(Float.TYPE)) {
+				} else if (type.equals(Float.TYPE)) {
 					String defaultValue = "0.1";
 					if(tempObj.isPresent())
 						defaultValue = String.valueOf(field.getFloat(tempObj.get()));
 					element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
-				} else if (field.getType().equals(Boolean.TYPE)) {
+				} else if (type.equals(Boolean.TYPE)) {
 					String defaultValue = "false";
 					if(tempObj.isPresent())
 						defaultValue = String.valueOf(field.getBoolean(tempObj.get()));
 					element = Optional.of(new BoolGuiElement(name, defaultValue));
+				} else if(type.isArray() && (
+						//type.getComponentType().isPrimitive() || 
+						type.getComponentType().equals(String.class))) {
+					if(tempObj.isPresent()) {
+						String[] vals = (String[])field.get(tempObj.get());
+						for(int i=0; i < vals.length;i++) {
+							vals[i] = "'"+vals[i]+"'";
+						}
+						if(vals.length > 0 && vals[0] != null) {
+							String values = Arrays.toString(vals);
+							element  = Optional.of(new StringListElement(name,vals[0],values));
+						}
+					}
+				} else {
+//					System.out.println(field.getType());
 				}
 			} catch (IllegalArgumentException | IllegalAccessException e) {
 				e.printStackTrace();
