@@ -26,6 +26,7 @@ public class DatGui {
 	StringBuilder builder;
 	Optional<FileWriter> fw;
 
+
 	public DatGui(SimpleHTTPServer server) {
 		this.server = Optional.of(server);
 		this.templateFileLocation = server.getParent().sketchPath() + "/data/templates.txt";
@@ -37,23 +38,31 @@ public class DatGui {
 		this.templateFileLocation = templateFileLocation;
 	}
 
-	public ClassGui add(Class<?> clazz) {
-		return add(clazz,null);
-	}
-	
-	public ClassGui add(Class<?> clazz,Object relatedObject) {
+	public ClassGui add(Object relatedObject) {
+		Class<?> clazz = relatedObject.getClass();
 		int id = getId(clazz);
 		ClassGui cg = new ClassGui(clazz,relatedObject,id);
 		classGuis.add(cg);
-		return cg;
-	}
-
-	public ClassGui addToUpdate(Object obj) {
-		ClassGui cg = add(obj.getClass(),obj);
-		updateContext.add(obj,cg);
+		updateContext.add(relatedObject,cg);
 		return cg;	
 	}
 
+	public ClassGui add(Object relatedObject,String[] fieldNames) {
+		Class<?> clazz = relatedObject.getClass();
+		int id = getId(clazz);
+		ClassGui cg = new ClassGui(clazz,relatedObject,id);
+		for(String fieldName : fieldNames) {
+			cg.addFieldGui(fieldName);
+		}
+		classGuis.add(cg);
+		updateContext.add(relatedObject,cg);
+		return cg;	
+	}
+	
+	public void allPublics() {
+		classGuis.stream().forEach(ClassGui::allPublics);
+	}
+	
 	private int getId(Class<?> clazz) {
 		//System.out.println("checking: "+clazz);
 		//classGuis.stream().forEach(cg -> System.out.println(cg.getClazz().getName()));

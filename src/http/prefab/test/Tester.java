@@ -23,27 +23,25 @@ public class Tester extends PApplet {
 		gui = new DatGui(server);
 		TestClass.parent = this;
 		tc = new TestClass(50);
-		ClassGui cg = gui.addToUpdate(tc);
+		ClassGui cg = gui.add(tc,new String[]{"level","speed","y"});
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);
 		cg.addMethodTrigger("reset");
-		cg.remove("x");
 
 		tc2 = new TestClass(120);
-		cg = gui.addToUpdate(tc2);
+		cg = gui.add(tc2,new String[]{"level","speed","y"});
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);		
-		cg.remove("x");
-
+		cg.isOpen = false;
 		
-		ClassGui cg2 = gui.addToUpdate(this);
+		ClassGui cg2 = gui.add(this,new String[]{"red","green","blue"});
 		cg2.getValueElement("red").min(0).max(255);
 		cg2.getValueElement("green").min(0).max(255);
 		cg2.getValueElement("blue").min(0).max(255);
 		
-		
 		TestClass2 arrayObj = new TestClass2();
-		ClassGui tc1 = gui.addToUpdate(arrayObj);
+		ClassGui tc1 = gui.add(arrayObj,new String[]{"vals"});
+		
 		
 		// gui.add(tc.getClass());
 		gui.build();

@@ -5,12 +5,11 @@ import java.util.Optional;
 
 public abstract class FieldGuiElement extends GuiElement {
 
+
 	Field field;
-	
-	@Override
-	public Optional<GuiElement> FromField(Field field, Object obj) {
-		// TODO Auto-generated method stub
-		return null;
+
+	public FieldGuiElement(String name) {
+		super(name);
 	}
 
 	@Override

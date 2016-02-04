@@ -20,8 +20,6 @@ public abstract class GuiElement {
 		this.defaultValue = defaultValue;
 	}
 	
-	abstract public Optional<GuiElement> FromField(Field field,Object obj);
-
 	abstract public String preDefBuild();
 
 	abstract public String build(String addTo,String objectName);

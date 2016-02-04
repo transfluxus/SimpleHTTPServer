@@ -27,77 +27,71 @@ public class ClassGui {
 
 	static String nl = System.getProperty("line.separator");
 
-	private final Optional<Object> relatedObject;
+	private final Object relatedObject;
 
-	public ClassGui(Class<?> clazz, Object obj, int id) {
+	public ClassGui(Class<?> clazz, Object relatedObject, int id) {
 		this.clazz = clazz;
 		this.name = clazz.getSimpleName() + id;
-		//System.out.println("CG: "+name);
-		if (obj != null)
-			relatedObject = Optional.of(obj);
-		else
-			relatedObject = Optional.empty();
-		allPublics();
+		// System.out.println("CG: "+name);
+		this.relatedObject = relatedObject;
 	}
 
 	public void allPublics() {
-		Field[] fields = clazz.getDeclaredFields();
-		Optional<Object> tempObj = Optional.empty();
-		if (relatedObject.isPresent())
-			tempObj = relatedObject;
-		else {
-			try {
-				tempObj = Optional.of(clazz.newInstance());
-			} catch (InstantiationException | IllegalAccessException e) {
-				System.out.println(
-						"The class: " + name + " should provide a public default constructor for the default values");
-			}
+		for (Field field : clazz.getDeclaredFields()) {
+			addFieldGui(field);
 		}
-		for (Field field : fields) {
-			if (!Modifier.isPublic(field.getModifiers()))
-				continue;
-			String name = field.getName();
-			Optional<? extends GuiElement> element = Optional.empty();
-			//System.out.println(field);
-			try {
-				Class<?> type = field.getType();
-				if (type.equals(Integer.TYPE)) {
-					String defaultValue = "0";
-					if(tempObj.isPresent())
-						defaultValue = String.valueOf(field.getInt(tempObj.get()));
-					element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
-				} else if (type.equals(Float.TYPE)) {
-					String defaultValue = "0.1";
-					if(tempObj.isPresent())
-						defaultValue = String.valueOf(field.getFloat(tempObj.get()));
-					element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
-				} else if (type.equals(Boolean.TYPE)) {
-					String defaultValue = "false";
-					if(tempObj.isPresent())
-						defaultValue = String.valueOf(field.getBoolean(tempObj.get()));
-					element = Optional.of(new BoolGuiElement(name, defaultValue));
-				} else if(type.isArray() && (
-						//type.getComponentType().isPrimitive() || 
-						type.getComponentType().equals(String.class))) {
-					if(tempObj.isPresent()) {
-						String[] vals = (String[])field.get(tempObj.get());
-						for(int i=0; i < vals.length;i++) {
-							vals[i] = "'"+vals[i]+"'";
-						}
-						if(vals.length > 0 && vals[0] != null) {
-							String values = Arrays.toString(vals);
-							element  = Optional.of(new StringListElement(name,vals[0],values));
-						}
-					}
-				} else {
-//					System.out.println(field.getType());
+	}
+
+	public void addFieldGui(String fieldName) {
+		try {
+			addFieldGui(clazz.getField(fieldName));
+		} catch (NoSuchFieldException | SecurityException e) {
+			System.err.println("Field with name: " + fieldName + " does not exist for class: " + clazz.getSimpleName());
+		}
+	}
+
+	public void addFieldGui(Field field) {
+		if (!Modifier.isPublic(field.getModifiers())) {
+			System.err.println(
+					"Field with name: " + field.getName() + " for class: " + clazz.getSimpleName() + " is not public");
+			return;
+		}
+		String name = field.getName();
+		Optional<? extends GuiElement> element = Optional.empty();
+		// System.out.println(field);
+		try {
+			Class<?> type = field.getType();
+			if (type.equals(Integer.TYPE)) {
+				String defaultValue = "0";
+				defaultValue = String.valueOf(field.getInt(relatedObject));
+				element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
+			} else if (type.equals(Float.TYPE)) {
+				String defaultValue = "0.1";
+				defaultValue = String.valueOf(field.getFloat(relatedObject));
+				element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
+			} else if (type.equals(Boolean.TYPE)) {
+				String defaultValue = "false";
+				defaultValue = String.valueOf(field.getBoolean(relatedObject));
+				element = Optional.of(new BoolGuiElement(name, defaultValue));
+			} else if (type.isArray() && (
+			// type.getComponentType().isPrimitive() ||
+			type.getComponentType().equals(String.class))) {
+				String[] vals = (String[]) field.get(relatedObject);
+				for (int i = 0; i < vals.length; i++) {
+					vals[i] = "'" + vals[i] + "'";
 				}
-			} catch (IllegalArgumentException | IllegalAccessException e) {
-				e.printStackTrace();
+				if (vals.length > 0 && vals[0] != null) {
+					String values = Arrays.toString(vals);
+					element = Optional.of(new StringListElement(name, vals[0], values));
+				}
+			} else {
+				// System.out.println(field.getType());
 			}
-			if (element.isPresent()) {
-				guiElements.add(element.get());
-			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		if (element.isPresent()) {
+			guiElements.add(element.get());
 		}
 	}
 
@@ -155,5 +149,5 @@ public class ClassGui {
 	public Class<?> getClazz() {
 		return clazz;
 	}
-	
+
 }

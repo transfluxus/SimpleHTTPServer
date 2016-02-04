@@ -1,5 +1,8 @@
 package http.prefab.guiElement;
 
+import java.lang.reflect.Field;
+import java.util.Optional;
+
 public class ValueGuiElement extends GuiElement {
 
 	public enum TYPE {INT,FLOAT};
@@ -61,4 +64,5 @@ public class ValueGuiElement extends GuiElement {
 		sb.append(".onChange(function(value) { addToUpdate('"+className+"','"+name+"',"+objectName+"."+name+"); });");
 		return sb.toString();
 	}
+
 }
