@@ -1,7 +1,8 @@
 package http.prefab.guiElement;
 
-import java.lang.reflect.Field;
-import java.util.Optional;
+import java.util.logging.Logger;
+
+import http.prefab.DatGui;
 
 public class ValueGuiElement extends GuiElement {
 
@@ -41,7 +42,8 @@ public class ValueGuiElement extends GuiElement {
 				""+Integer.parseInt(defaultValue) : 
 					""+Float.parseFloat(defaultValue));
 		if(type == TYPE.FLOAT && Float.parseFloat(defaultValue) % 1.0 == 0) {
-			System.err.println("Better give float value: '"+ name+"' a non integer default value("+defaultValue+"). otherwise dat.gui will display it as an integer");
+			Logger.getLogger("net.diskordier").info("Better give float value: '"+ name+"' a non integer default value("+defaultValue+"). "
+					+ "otherwise dat.gui will display it as an integer");
 		}
 		String ret =  "this."+name+ " = " +val+";";
 		return ret;

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import http.prefab.guiElement.BangGuiElement;
 import http.prefab.guiElement.BoolGuiElement;
@@ -28,63 +29,46 @@ public class ClassGui {
 	static String nl = System.getProperty("line.separator");
 
 	private final Object relatedObject;
+	
+	Logger logger;
 
 	public ClassGui(Class<?> clazz, Object relatedObject, int id) {
 		this.clazz = clazz;
 		this.name = clazz.getSimpleName() + id;
 		// System.out.println("CG: "+name);
 		this.relatedObject = relatedObject;
+		logger =  Logger.getLogger("datguiLogger");
 	}
 
 	public void allPublics() {
 		for (Field field : clazz.getDeclaredFields()) {
-			addFieldGui(field);
+			addFieldGui(field.getName());
 		}
 	}
 
 	public void addFieldGui(String fieldName) {
-		try {
-			addFieldGui(clazz.getField(fieldName));
-		} catch (NoSuchFieldException | SecurityException e) {
-			System.err.println("Field with name: " + fieldName + " does not exist for class: " + clazz.getSimpleName());
-		}
-	}
-
-	public void addFieldGui(Field field) {
-		if (!Modifier.isPublic(field.getModifiers())) {
-			System.err.println(
-					"Field with name: " + field.getName() + " for class: " + clazz.getSimpleName() + " is not public");
+		Optional<Field> fieldOpt = getField(fieldName);
+		if (!fieldOpt.isPresent())
 			return;
-		}
-		String name = field.getName();
+		Field field = fieldOpt.get();
+		Class<?> type = field.getType();
 		Optional<? extends GuiElement> element = Optional.empty();
 		// System.out.println(field);
 		try {
-			Class<?> type = field.getType();
 			if (type.equals(Integer.TYPE)) {
 				String defaultValue = "0";
 				defaultValue = String.valueOf(field.getInt(relatedObject));
-				element = Optional.of(new ValueGuiElement(name, TYPE.INT, defaultValue).step(1));
+				element = Optional.of(new ValueGuiElement(fieldName, TYPE.INT, defaultValue).step(1));
 			} else if (type.equals(Float.TYPE)) {
 				String defaultValue = "0.1";
 				defaultValue = String.valueOf(field.getFloat(relatedObject));
-				element = Optional.of(new ValueGuiElement(name, TYPE.FLOAT, defaultValue));
+				element = Optional.of(new ValueGuiElement(fieldName, TYPE.FLOAT, defaultValue));
 			} else if (type.equals(Boolean.TYPE)) {
 				String defaultValue = "false";
 				defaultValue = String.valueOf(field.getBoolean(relatedObject));
-				element = Optional.of(new BoolGuiElement(name, defaultValue));
-			} else if (type.isArray() && (
-			// type.getComponentType().isPrimitive() ||
-			type.getComponentType().equals(String.class))) {
-				String[] vals = (String[]) field.get(relatedObject);
-				for (int i = 0; i < vals.length; i++) {
-					vals[i] = "'" + vals[i] + "'";
-				}
-				if (vals.length > 0 && vals[0] != null) {
-					String values = Arrays.toString(vals);
-					element = Optional.of(new StringListElement(name, vals[0], values));
-				}
+				element = Optional.of(new BoolGuiElement(fieldName, defaultValue));
 			} else {
+				logger.info("The field: " + fieldName + " has a unsupported type (supported are int,float,bool)");
 				// System.out.println(field.getType());
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -92,6 +76,63 @@ public class ClassGui {
 		}
 		if (element.isPresent()) {
 			guiElements.add(element.get());
+		} else {
+			logger.warning("guiElement for field': "+fieldName+"' of class: '"+name+"' could not be created");
+		}
+	}
+
+	public void addSelector(String arrayName, int defaultIndex, String targetFieldName) {
+
+		Optional<Field> fieldOpt = getField(arrayName);
+		if (!fieldOpt.isPresent())
+			return;
+		Field field = fieldOpt.get();
+		Class<?> type = field.getType();
+
+		Optional<Field> targetFieldOpt = getField(targetFieldName);
+		if (!targetFieldOpt.isPresent())
+			return;
+		Field targetField = targetFieldOpt.get();
+		Class<?> targetType = targetField.getType();
+		// if one necessary condition (1: array of strings and 2: target =
+		// string > bye
+		if (!type.isArray() || !type.getComponentType().equals(String.class) || !targetType.equals(String.class)) {
+			logger.warning("Selector with: "+arrayName +" > "+targetFieldName+ " in class: "+name+" can not be created. Array must be array of Strings, target must be a String"
+					);
+			return;
+		}
+
+		
+		try {
+			String[] vals = (String[]) field.get(relatedObject);
+			targetField.set(relatedObject, vals[defaultIndex]);
+			for (int i = 0; i < vals.length; i++) {
+				vals[i] = "'" + vals[i] + "'";
+			}
+			if (vals.length > 0 && vals[0] != null) {
+				String values = Arrays.toString(vals);
+				//element = Optional.of(new StringListElement(arrayName, vals[defaultIndex], values));
+				guiElements.add(new StringListElement(arrayName, vals[defaultIndex], values,targetFieldName));
+			}
+			
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private Optional<Field> getField(String fieldName) {
+		try {
+			Field field = clazz.getField(fieldName);
+			if (!Modifier.isPublic(field.getModifiers())) {
+				System.err.println("Field with name: " + field.getName() + " for class: " + clazz.getSimpleName()
+						+ " is not public");
+				return Optional.empty();
+			}
+
+			return Optional.of(field);
+		} catch (NoSuchFieldException | SecurityException e) {
+			System.err.println("Field with name: " + fieldName + " does not exist for class: " + clazz.getSimpleName());
+			return Optional.empty();
 		}
 	}
 
@@ -118,7 +159,7 @@ public class ClassGui {
 			return (ValueGuiElement) elem.get();
 		} else {
 			throw new NullPointerException(
-					"The element you are looking for: " + name + " is no gui element of this ClassGui");
+					"The element you are looking for: '" + name + "' is no gui element of this ClassGui");
 		}
 	}
 

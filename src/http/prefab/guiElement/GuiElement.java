@@ -1,8 +1,5 @@
 package http.prefab.guiElement;
 
-import java.lang.reflect.Field;
-import java.util.Optional;
-
 public abstract class GuiElement {
 
 	public final String name;

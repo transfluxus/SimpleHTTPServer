@@ -1,6 +1,7 @@
 package http.prefab.test;
 
-import http.DynamicResponseHandler;
+import java.util.logging.Level;
+
 import http.SimpleHTTPServer;
 import http.prefab.ClassGui;
 import http.prefab.DatGui;
@@ -10,9 +11,10 @@ public class Tester extends PApplet {
 
 	SimpleHTTPServer server;
 	DatGui gui;
-	TestClass tc,tc2;
-	
-	public int red,green,blue;
+	TestClass tc, tc2;
+	TestClass2 arrayObj;
+
+	public int red, green, blue;
 
 	public void settings() {
 		size(600, 200);
@@ -23,39 +25,55 @@ public class Tester extends PApplet {
 		gui = new DatGui(server);
 		TestClass.parent = this;
 		tc = new TestClass(50);
-		ClassGui cg = gui.add(tc,new String[]{"level","speed","y"});
+		ClassGui cg = gui.add(tc, new String[] { "level", "speed", "y","red"});
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);
 		cg.addMethodTrigger("reset");
 
 		tc2 = new TestClass(120);
-		cg = gui.add(tc2,new String[]{"level","speed","y"});
+		cg = gui.add(tc2, new String[] { "level", "speed", "y" });
 		cg.getValueElement("level").min(1).max(30);
-		cg.getValueElement("speed").min(-20).max(20);		
+		cg.getValueElement("speed").min(-20).max(20);
 		cg.isOpen = false;
-		
-		ClassGui cg2 = gui.add(this,new String[]{"red","green","blue"});
+
+		ClassGui cg2 = gui.add(this, new String[] { "red", "green", "blue" });
+		// addSelector(this,new String[]{"red","green","blue"});
 		cg2.getValueElement("red").min(0).max(255);
 		cg2.getValueElement("green").min(0).max(255);
 		cg2.getValueElement("blue").min(0).max(255);
-		
-		TestClass2 arrayObj = new TestClass2();
-		ClassGui tc1 = gui.add(arrayObj,new String[]{"vals"});
-		
-		
+
+		arrayObj = new TestClass2();
+		ClassGui tc1 = gui.add(arrayObj);
+		tc1.addSelector("vals", 1, "value");
+
+		gui.setLogLevel(Level.SEVERE);
 		// gui.add(tc.getClass());
 		gui.build();
-		DynamicResponseHandler handler = gui.getHandler();
-		server.createContext("datgui", handler);
 	}
 
-
 	public void draw() {
-		background(red,green,blue);
-		if (tc.red)
-			fill(255, 0, 0);
-		else
-			fill(255);
+		background(red, green, blue);
+		switch (arrayObj.value) {
+		case "Stroke":
+			stroke(255);
+			noFill();
+			break;
+		case "Fill":
+			noStroke();
+			if (tc.red)
+				fill(255, 0, 0);
+			else
+				fill(255);
+			break;
+		case "StrokeFill":
+			stroke(255);
+			if (tc.red)
+				fill(255, 0, 0);
+			else
+				fill(255);
+			break;
+		}
+
 		tc.draw();
 		tc2.draw();
 	}

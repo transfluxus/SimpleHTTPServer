@@ -12,10 +12,12 @@ import com.sun.net.httpserver.HttpServer;
 public class SimpleHTTPServer {
 
 	protected static PApplet parent;
-	HttpServer server;
+	private HttpServer server;
 	
 	SimpleFileHandler indexFileHandler;
 
+	boolean isRunning;
+	
 	/**
 	 * Creates a HTTPServer listening on port 8000
 	 * @param parent Processing parent
@@ -37,18 +39,23 @@ public class SimpleHTTPServer {
 			indexFileHandler = new SimpleFileHandler("index.html");
 			createContext("", indexFileHandler);
 			server.start();
+			isRunning = true;
 			System.out.println("SimpleHTTPServer running on port 8000");
 		} catch (Exception exc) {
-			System.out.println();
 			System.out.println("Server couldn't start: " + exc.getMessage());
 		}
 	}
 
+	public void start() {
+		server.start();
+	}
+	
 	/**
 	 * Stop the server
 	 */
 	public void stop() {
 		server.stop(0);
+		isRunning = false;
 	}
 
 	
@@ -115,7 +122,12 @@ public class SimpleHTTPServer {
 		}
 	}
 
+	
 	public PApplet getParent() {
 		return parent;
+	}
+
+	public boolean isRunning() {
+		return isRunning;
 	}
 }

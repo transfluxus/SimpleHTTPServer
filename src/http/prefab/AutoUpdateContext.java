@@ -50,8 +50,9 @@ public class AutoUpdateContext extends ResponseBuilder {
 						} else if (type == Boolean.TYPE) {
 							boolean value = jsonClazz.getBoolean(fieldName);
 							field.setBoolean(updateObject, value);
-						} else if(type.isArray() && type.getComponentType().equals(String.class)) {
-							
+						} else if(type == String.class) { //StringList
+							String value = jsonClazz.getString(fieldName);
+							field.set(updateObject, value);
 						}
 					} catch (NoSuchFieldException | SecurityException e) {
 						System.err.println("No acces to the field: " + fieldName + " of class " + clazzName);
