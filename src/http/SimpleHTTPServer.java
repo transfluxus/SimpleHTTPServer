@@ -3,11 +3,13 @@ package http;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.logging.Logger;
 
 import processing.core.PApplet;
 
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
 
 public class SimpleHTTPServer {
 
@@ -17,6 +19,8 @@ public class SimpleHTTPServer {
 	SimpleFileHandler indexFileHandler;
 
 	boolean isRunning;
+	
+	protected static Logger logger = Logger.getLogger("	");
 	
 	/**
 	 * Creates a HTTPServer listening on port 8000
@@ -44,6 +48,7 @@ public class SimpleHTTPServer {
 		} catch (Exception exc) {
 			System.out.println("Server couldn't start: " + exc.getMessage());
 		}
+		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 	}
 
 	public void start() {

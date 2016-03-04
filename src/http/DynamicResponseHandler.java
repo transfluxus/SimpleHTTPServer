@@ -6,15 +6,15 @@ import java.io.OutputStream;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
-public class DynamicResponseHandler implements HttpHandler {
+public class DynamicResponseHandler extends ExtHttpHandler {
 
 	private ResponseBuilder responseBuilder;
 	private String contentType;
 
 	public DynamicResponseHandler(ResponseBuilder responseBuilder, String contentType) {
 		this.responseBuilder = responseBuilder;
+		this.responseBuilder.parent = this;
 		this.contentType = contentType;
 	}
 
@@ -23,6 +23,7 @@ public class DynamicResponseHandler implements HttpHandler {
 			String requestBody = parseRequestBody(t);
 			Headers headers = t.getResponseHeaders();
 			headers.add("Content-Type", contentType);
+			setHttpExchange(t);
 			byte[] response = responseBuilder.responseBytes(requestBody);
 			t.sendResponseHeaders(200, response.length);
 			OutputStream os = t.getResponseBody();

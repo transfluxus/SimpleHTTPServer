@@ -7,23 +7,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.Map;
-
-import processing.core.PApplet;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
-class SimpleFileHandler implements HttpHandler {
+import processing.core.PApplet;
+
+class SimpleFileHandler extends ExtHttpHandler {
 
 	public static PApplet parent;
 
 	private final String fileName;
 	private final String contentType;
-	private Method callbackMethod;
 	private boolean callbackMethodSet;
+	private Method callbackMethod;
 
 	public SimpleFileHandler(String fileName) {
 		if(!parent.dataFile(fileName).exists()) {
@@ -80,12 +78,7 @@ class SimpleFileHandler implements HttpHandler {
 		if(callbackMethodSet) {
 			//PApplet.println("callback!");
 			String uri = t.getRequestURI().toString();
-			String query = t.getRequestURI().getQuery();
-			//PApplet.println("query:",query);
-			if(query == null) {
-				System.err.println("URI:" +uri + " called without query parameters. Callback method is not called");
-			}
-			Map<String, String> map = queryToMap(query);
+			Map<String, String> map = queryToMap(t);
 			//PApplet.println("map:",map);
 			try {
 				callbackMethod.invoke(parent, new Object[]{uri,map});
@@ -103,23 +96,5 @@ class SimpleFileHandler implements HttpHandler {
 		callbackMethodSet = true;
 		this.callbackMethod = callbackMethod;
 	}
-	
-	  /**
-	   * returns the url parameters in a map
-	   * @param query
-	   * @return map
-	   */
-	  public Map<String, String> queryToMap(String query){
-	    Map<String, String> result = new HashMap<String, String>();
-	    for (String param : query.split("&")) {
-	        String pair[] = param.split("=");
-	        if (pair.length>1) {
-	            result.put(pair[0], pair[1]);
-	        }else{
-	            result.put(pair[0], "");
-	        }
-	    }
-	    return result;
-	  }
 	  
 }
