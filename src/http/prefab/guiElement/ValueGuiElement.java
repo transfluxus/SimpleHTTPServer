@@ -2,16 +2,14 @@ package http.prefab.guiElement;
 
 import java.util.logging.Logger;
 
-import http.prefab.DatGui;
-
 public class ValueGuiElement extends GuiElement {
 
 	public enum TYPE {INT,FLOAT};
 	
-	public final TYPE type;
-	public float min = Float.NaN;
-	public float max = Float.NaN;
-	public float step = Float.NaN;
+	private final TYPE type;
+	private float min = Float.NaN;
+	private float max = Float.NaN;
+	private float step = Float.NaN;
 	
 	public ValueGuiElement(String name, TYPE type) {
 		this(name,type,"0");
@@ -37,6 +35,7 @@ public class ValueGuiElement extends GuiElement {
 		return this;
 	}
 
+	@Override
 	public String preDefBuild() {
 		String val = (type == TYPE.INT ? 
 				""+Integer.parseInt(defaultValue) : 
@@ -50,6 +49,7 @@ public class ValueGuiElement extends GuiElement {
 	}
 	
 	
+	@Override
 	public String build(String addTo,String objectName) {
 		StringBuilder sb= new StringBuilder(addTo+".add("+objectName+", '"+name+"')");
 		String className = objectName.substring(0,objectName.length()-3);

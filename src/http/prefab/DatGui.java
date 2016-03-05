@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -48,10 +47,22 @@ public class DatGui {
 		logger.getParent().getHandlers()[0].setFormatter(new DatGUILogFormatter());
 	}
 
+	/**
+	 * Add an Object to the gui, which you want to edit in the gui
+	 * @param relatedObject
+	 * @return
+	 */
 	public ClassGui add(Object relatedObject) {
 		return add(relatedObject, new String[] {});
 	}
 
+	/**
+	 * Add an Object to the gui, with the specified public fields
+	 * 
+	 * @param relatedObject
+	 * @param fieldNames Array of Fieldnames
+	 * @return
+	 */
 	public ClassGui add(Object relatedObject, String[] fieldNames) {
 		Class<?> clazz = relatedObject.getClass();
 		int id = getId(clazz);
@@ -86,7 +97,7 @@ public class DatGui {
 	public String build() {
 		return build("index.html");
 	}
-
+	
 	public String build(String fileName) {
 		// boolean completeHTML = server.isPresent();
 		this.builder = new StringBuilder();
@@ -136,10 +147,11 @@ public class DatGui {
 			classGuis.stream().forEach(cl -> appendToOutput(cl.build()));
 			appendToOutput("};");
 			appendToOutput("setInterval(autoSend," + sendDelay + ");");
-			appendToOutput("</script>");
 
+			if(htmlFile) {
 			while ((templateString = templateReader.readLine()) != null) {
 				appendToOutput(templateString);
+			}
 			}
 			if (fw.isPresent())
 				fw.get().close();
@@ -165,7 +177,24 @@ public class DatGui {
 		return builder.toString();
 	}
 
-	public void appendToOutput(String text) {
+	public ClassGui getClassGui(Object relObj) {
+		// J7
+		Optional<ClassGui> cg = Optional.empty();
+		for(ClassGui c : classGuis) {
+			if(c.getRelatedObject() == relObj) 
+				cg = Optional.of(c);
+		}
+		// J8
+		//Optional<ClassGui> cg = classGuis.stream().filter(c -> c.getRelatedObject() == relObj).findAny();
+		
+		if(!cg.isPresent()) {
+			throw new NullPointerException("Requested Object is not added to the DatGui");
+		} else {
+			return cg.get();
+		}
+	}
+	
+	private void appendToOutput(String text) {
 		builder.append(text + nl);
 		if (fw.isPresent()) {
 			try {
@@ -176,16 +205,21 @@ public class DatGui {
 		}
 	}
 
+	/**
+	 * Sets the delay
+	 * @param millis
+	 */
 	public void setSendDelay(int millis) {
 		sendDelay = millis;
 	}
 
+	private DynamicResponseHandler getHandler() {
+		return new DynamicResponseHandler(updateContext, "application/json");
+	}
+	
+	/*
 	public AutoUpdateContext getUpdateContext() {
 		return updateContext;
-	}
-
-	public DynamicResponseHandler getHandler() {
-		return new DynamicResponseHandler(getUpdateContext(), "application/json");
 	}
 
 	public void addToHeader(String headerText) {
@@ -195,6 +229,7 @@ public class DatGui {
 	public void addToBody(String bodyText) {
 		// TODO
 	}
+	*/
 
 	private final class DatGUILogFormatter extends Formatter {
 

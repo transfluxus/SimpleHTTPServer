@@ -20,7 +20,7 @@ public class ClassGui {
 
 	private final Class<?> clazz;
 
-	private String name;
+	public final String name;
 
 	public boolean isOpen = true;
 
@@ -128,7 +128,11 @@ public class ClassGui {
 						+ " is not public");
 				return Optional.empty();
 			}
-
+			if(Modifier.isFinal(field.getModifiers())) {
+				logger.warning("Field with name: " + field.getName() + " for class: " + clazz.getSimpleName()
+				+ " is final and cannot be edited");
+				return Optional.empty();
+			}
 			return Optional.of(field);
 		} catch (NoSuchFieldException | SecurityException e) {
 			System.err.println("Field with name: " + fieldName + " does not exist for class: " + clazz.getSimpleName());
@@ -191,4 +195,12 @@ public class ClassGui {
 		return clazz;
 	}
 
+	public void setBoundary(String valueName, float min, float max) {
+		getValueElement(valueName).min(min).max(max);
+	}
+
+	public Object getRelatedObject() {
+		return relatedObject;
+	}
+	
 }

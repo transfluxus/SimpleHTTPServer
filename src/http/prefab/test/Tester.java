@@ -11,29 +11,34 @@ public class Tester extends PApplet {
 
 	SimpleHTTPServer server;
 	DatGui gui;
-	TestClass tc, tc2;
+	MovingCircle tc, tc2;
 	TestClass2 arrayObj;
 
-	public int red, green, blue;
+	public int red, green;
+	public int blue = 100;
 
+	@Override
 	public void settings() {
 		size(600, 200);
 	}
 
+	@Override
 	public void setup() {
 		server = new SimpleHTTPServer(this);
 		gui = new DatGui(server);
-		TestClass.parent = this;
-		tc = new TestClass(50);
+		MovingCircle.parent = this;
+		tc = new MovingCircle(50);
 		ClassGui cg = gui.add(tc, new String[] { "level", "speed", "y","red"});
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);
+		cg.setBoundary("y",0,height);
 		cg.addMethodTrigger("reset");
 
-		tc2 = new TestClass(120);
+		tc2 = new MovingCircle(120);
 		cg = gui.add(tc2, new String[] { "level", "speed", "y" });
 		cg.getValueElement("level").min(1).max(30);
 		cg.getValueElement("speed").min(-20).max(20);
+		cg.setBoundary("y",0,height);
 		cg.isOpen = false;
 
 		ClassGui cg2 = gui.add(this, new String[] { "red", "green", "blue" });
@@ -48,9 +53,10 @@ public class Tester extends PApplet {
 
 		gui.setLogLevel(Level.SEVERE);
 		// gui.add(tc.getClass());
-		gui.build();
+		gui.build("bla.js");
 	}
 
+	@Override
 	public void draw() {
 		background(red, green, blue);
 		switch (arrayObj.value) {
