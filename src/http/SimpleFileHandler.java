@@ -18,7 +18,7 @@ class SimpleFileHandler extends ExtHttpHandler {
 
 	public static PApplet parent;
 
-	private final String fileName;
+	protected final String fileName;
 	private final String contentType;
 	private boolean callbackMethodSet;
 	private Method callbackMethod;
@@ -47,7 +47,7 @@ class SimpleFileHandler extends ExtHttpHandler {
 		this.contentType = contentType;
 	}
 
-	private byte[] getResponseBytes() {
+	protected byte[] getResponseBytes() {
 		File file = new File(SimpleHTTPServer.parent.sketchPath() + "/data/"
 				+ fileName);
 		byte[] bytearray = new byte[(int) file.length()];
@@ -62,23 +62,24 @@ class SimpleFileHandler extends ExtHttpHandler {
 		return bytearray;
 	}
 
-	public void handle(HttpExchange t) throws IOException {
-		//PApplet.println("handle: "+ t.getRequestURI().toString());
+	@Override
+	public void handle(HttpExchange exchange) throws IOException {
+		setHttpExchange(exchange);
 		byte[] response = getResponseBytes();
 		if (contentType != null) {
-			Headers headers = t.getResponseHeaders();
+			Headers headers = exchange.getResponseHeaders();
 			headers.add("Content-Type", contentType);
 			//System.out.println("serving "+fileName +" as " +contentType);
 		}
-		t.sendResponseHeaders(200, response.length);
-		OutputStream os = t.getResponseBody();
+		exchange.sendResponseHeaders(200, response.length);
+		OutputStream os = exchange.getResponseBody();
 		os.write(response, 0, response.length);
 		os.close();
 		
 		if(callbackMethodSet) {
 			//PApplet.println("callback!");
-			String uri = t.getRequestURI().toString();
-			Map<String, String> map = queryToMap(t);
+			String uri = exchange.getRequestURI().toString();
+			Map<String, String> map = queryToMap(exchange);
 			//PApplet.println("map:",map);
 			try {
 				callbackMethod.invoke(parent, new Object[]{uri,map});

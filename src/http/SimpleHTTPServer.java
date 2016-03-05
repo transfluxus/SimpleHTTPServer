@@ -1,5 +1,7 @@
 package http;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -10,6 +12,9 @@ import processing.core.PApplet;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
+
 
 public class SimpleHTTPServer {
 
@@ -19,6 +24,8 @@ public class SimpleHTTPServer {
 	SimpleFileHandler indexFileHandler;
 
 	boolean isRunning;
+	
+	public static Configuration freeMarker_configuration;
 	
 	protected static Logger logger = Logger.getLogger("	");
 	
@@ -44,7 +51,7 @@ public class SimpleHTTPServer {
 			createContext("", indexFileHandler);
 			server.start();
 			isRunning = true;
-			System.out.println("SimpleHTTPServer running on port 8000");
+			System.out.println("SimpleHTTPServer running on port "+port);
 		} catch (Exception exc) {
 			System.out.println("Server couldn't start: " + exc.getMessage());
 		}
@@ -134,5 +141,18 @@ public class SimpleHTTPServer {
 
 	public boolean isRunning() {
 		return isRunning;
+	}
+	
+	static protected void setupFMConfig(String templateFolderName) {
+		if(freeMarker_configuration == null) {
+			freeMarker_configuration = new Configuration(Configuration.VERSION_2_3_22);
+			try {
+				freeMarker_configuration.setDirectoryForTemplateLoading(new File(templateFolderName));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			freeMarker_configuration.setDefaultEncoding("UTF-8");
+			freeMarker_configuration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+		}
 	}
 }

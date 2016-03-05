@@ -18,6 +18,7 @@ public class DynamicResponseHandler extends ExtHttpHandler {
 		this.contentType = contentType;
 	}
 
+	@Override
 	public void handle(HttpExchange t) throws IOException {
 		try {
 			String requestBody = parseRequestBody(t);

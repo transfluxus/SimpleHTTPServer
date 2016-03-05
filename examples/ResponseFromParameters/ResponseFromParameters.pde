@@ -25,23 +25,18 @@ void setup() {
   server = new SimpleHTTPServer(this); 
   // create a custom Responsehandler with the class JSONEcho, that is defined below
   // and extends from ResponseBuilder. It returns some json.
-  DynamicResponseHandler responder = new DynamicResponseHandler(new JSONEcho(),"text/html");
+  TemplateFileHandler responder = new ResultFromPost("params.html");
   server.createContext("params.html", responder);
 }
 
-class JSONEcho extends ResponseBuilder {
+class ResultFromPost extends TemplateFileHandler {
   
-  /**
-  This abstract function needs to be overwritten. 
-  In this example the json request needs to include a requestNumber.
-  It then returns the same JSONObject but adds responseNumber,which is the double
-  of requestNumber
-  */
-  public  String getResponse(String requestBody) {
-    println(getQueryMap());
-    JSONObject json = parseJSONObject(requestBody);
-    int number = json.getInt("requestNumber");
-    json.setInt("responseNumber", number*2);
-    return json.toString();
+  public ResultFromPost(String templateFileName) {
+    super(templateFileName);
   }
+  
+  void createMap(){
+    
+  }
+  
 }
