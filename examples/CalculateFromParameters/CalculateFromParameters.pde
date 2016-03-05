@@ -9,12 +9,9 @@
  in which you can access the query parameters from the map
  Map<String, String> params = queryToMap();
  The Apache FreeMarker is very powerfull and I only use simple replacement:
- ${user} in the template is replaced by the query parameter user.
- So localhost:8000/?user=Ramin
- returns a page saying "Hello Ramin".
- If the parameter user does not exist in the query it will say: 
- "Hello unknown user"
- 
+ ${result} in the template is replaced by multiplication of the query parameters a and b.
+ So http://localhost:8000/?a=10&b=2
+ returns a page with the result 20
  
  The server is accessible under the root url:
  http://localhost:8000/
@@ -50,11 +47,17 @@ class ResultFromPost extends TemplateFileHandler {
 
   void createMap() {
     Map<String, String> params = queryToMap();
-    String user = "unknown user";
-    if (params.containsKey("user")) {
-      user = params.get("user");
+    float result = 0;
+    // calculate the result when both parameter a and b are there
+    if (params.containsKey("a") && params.containsKey("b")) {
+      try {
+        result = Float.valueOf(params.get("a")) * Float.valueOf(params.get("b"));
+      } 
+      catch(Exception exc) {
+        println("parameters are probably no numbers");
+      }
     }
-    // add the user to the model, which will be used to process the template
-    addModel("user", user);
+    // add the result to the model, which will be used to process the template
+    addModel("result", result);
   }
 }

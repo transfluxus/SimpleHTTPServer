@@ -1,6 +1,7 @@
 package examples.responseFromParameters;
 
 import java.util.Map;
+import java.util.logging.Level;
 
 import http.SimpleHTTPServer;
 import http.TemplateFileHandler;
@@ -18,10 +19,12 @@ public class ResponseFromParameters extends PApplet {
 	@Override
 	public void setup() {
 		// Create a server listening on port 8000
+		SimpleHTTPServer.setLoggerLevel(Level.CONFIG);
 		server = new SimpleHTTPServer(this);
-		server.serve(sketchPath() + "/data/examples/responseFromParameters/", "index.html");
-		TemplateFileHandler responder = new ResultFromPost("examples/responseFromParameters/params.html");
-		server.createContext("params.html", responder);
+		server.removeContext("");
+//		server.serve("examples/data/", "index.html");
+		TemplateFileHandler responder = new ResultFromPost("examples/responseFromParameters/index.html");
+		server.createContext("", responder);
 	}
 
 	public class ResultFromPost extends TemplateFileHandler {
@@ -32,12 +35,18 @@ public class ResponseFromParameters extends PApplet {
 
 		@Override
 		public void createMap() {
-			Map<String,String> params = queryToMap();
-			float result = 0;
-			if(params.containsKey("a") && params.containsKey("b")) {
-				result = Float.valueOf(params.get("a")) * Float.valueOf(params.get("b"));
+			Map<String, String> params = queryToMap();
+			String user = "unknown user";
+			if (params.containsKey("user")) {
+				user = params.get("user");
 			}
-			addModel("result", ""+result);
+			addModel("user", user);
+			/*
+			 * Map<String,String> params = queryToMap(); float result = 0;
+			 * if(params.containsKey("a") && params. containsKey("b")) { result
+			 * = Float.valueOf(params.get("a")) *
+			 * Float.valueOf(params.get("b")); } addModel("result", ""+result);
+			 */
 		}
 	}
 

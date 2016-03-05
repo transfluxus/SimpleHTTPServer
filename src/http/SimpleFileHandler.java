@@ -12,6 +12,7 @@ import java.util.Map;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
+import freemarker.log.Logger;
 import processing.core.PApplet;
 
 class SimpleFileHandler extends ExtHttpHandler {
@@ -25,7 +26,7 @@ class SimpleFileHandler extends ExtHttpHandler {
 
 	public SimpleFileHandler(String fileName) {
 		if(!parent.dataFile(fileName).exists()) {
-			System.out.println("Cannot create FileHandler: "+fileName +" is missing");
+			Logger.getLogger(" ").warn("Cannot create FileHandler: "+fileName +" is missing");
 		}
 		this.fileName = fileName;
 		if (fileName.endsWith(".html")) {
@@ -35,6 +36,8 @@ class SimpleFileHandler extends ExtHttpHandler {
 			this.contentType = "text/css";
 		} else if (fileName.endsWith(".js")) {
 			this.contentType = "text/javascript";
+		} else if(fileName.endsWith(".ftl")) {
+			this.contentType = "text/html";
 		} else {
 			System.out
 					.println("content type could not be derrived. Better use SimpleFileHandler(String fileName, String contentType)");

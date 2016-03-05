@@ -1,16 +1,6 @@
 <!DOCTYPE html>
 <html>
-	<header>
-		<style type="text/css">
-		.hello {
-			position: absolute;
-			top:200px;
-			text-align: center;
-			font-size: 200px;
-			width:100%;
-		}
-		</style>
-	</header>
+	<header></header>
 	<body>
 	<form  action="" method="get">
 	  A<br>

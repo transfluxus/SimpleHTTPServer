@@ -2,6 +2,7 @@ package http;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -10,6 +11,8 @@ public abstract class ExtHttpHandler implements HttpHandler {
 
 	protected HttpExchange exchange;
 
+	protected Logger logger = Logger.getLogger("server");
+	
 	public Map<String, String> queryToMap() {
 		return queryToMap(exchange);
 	}
@@ -21,11 +24,7 @@ public abstract class ExtHttpHandler implements HttpHandler {
 	 * @return map
 	 */
 	protected Map<String, String> queryToMap(HttpExchange exchange) {
-		// String uri = exchange.getRequestURI().toString();
-		String query = exchange.getRequestURI().getQuery();
-		// PApplet.println("query:",query);
-		Map<String, String> map = queryToMap(query);
-		return map;
+		return queryToMap(exchange.getRequestURI().getQuery());
 	}
 
 	/**
@@ -36,7 +35,10 @@ public abstract class ExtHttpHandler implements HttpHandler {
 	 */
 	protected Map<String, String> queryToMap(String query) {
 		Map<String, String> result = new HashMap<String, String>();
-		for (String param : query.split("&")) {
+		if(query == null)
+			return result;
+		String[] params = query.split("&");
+		for (String param : params) {
 			String pair[] = param.split("=");
 			if (pair.length > 1) {
 				result.put(pair[0], pair[1]);

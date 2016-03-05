@@ -43,18 +43,13 @@ public abstract class TemplateFileHandler extends SimpleFileHandler {
 
 	@Override
 	protected byte[] getResponseBytes() {
-		System.out.println("building page from template: "+fileName);
-//		File file = new File(SimpleHTTPServer.parent.sketchPath() + "/data/" + fileName);
-		byte[] bytearray = new byte[0];// = new byte[(int) file.length()];
+		logger.config("Building page from template: "+fileName);
+		createMap();
+		byte[] bytearray = new byte[0];
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			createMap();
 			template.process(root, new OutputStreamWriter(bos));
 			bytearray = bos.toByteArray();
-			//FileInputStream fis = new FileInputStream(file);
-			//BufferedInputStream bis = new BufferedInputStream(fis);
-			//bis.read(bytearray, 0, bytearray.length);
-			//fis.close();
 		} catch (IOException ioExc) {
 			System.err.println("error reading file: " + fileName);
 		} catch (TemplateException tempExc) {
@@ -62,5 +57,4 @@ public abstract class TemplateFileHandler extends SimpleFileHandler {
 		}
 		return bytearray;
 	}
-
 }
