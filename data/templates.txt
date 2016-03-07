@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="data/dat.gui.js">
+</head>
+<body>
+
+	<script>
+### script
+
+### html-end
+	</script>
+</body>
+</html>
+
