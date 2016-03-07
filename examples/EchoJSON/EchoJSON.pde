@@ -32,8 +32,6 @@ void setup() {
 }
 
 class JSONEcho extends ResponseBuilder {
-
-  
   
   /**
   This abstract function needs to be overwritten. 
