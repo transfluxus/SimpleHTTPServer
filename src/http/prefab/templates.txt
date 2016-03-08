@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+<script type='text/javascript' src='dat.gui.js'></script>
+<script type='text/javascript'>
+### script
+var gui = new dat.GUI({ autoPlace: false });
+document.body.appendChild(gui.domElement);
+var update = {};
+var dirty = false;
+
+function addToUpdate(objName,valName,value) {
+	if (!(objName in update)) {
+		update[objName] = {};
+	}
+	var addValue = !valName in update[objName] || update[objName][valName] != value;
+	if(addValue) {
+		update[objName][valName] = value;	
+		dirty = true;	
+	}
+}
+
+function send(jsonObj) {
+		//console.log(jsonObj);
+		var xhr = new XMLHttpRequest();
+		xhr.open('PUT', 'datgui');
+		xhr.setRequestHeader('Content-Type', 'application/json');
+		xhr.onload = function() {
+		    if (xhr.status === 200) {
+		
+		    }
+		};
+		xhr.send(jsonObj);
+}
+
+function autoSend() {
+	//nsole.log(">>>");
+	//console.log(update);
+	//console.log(Object.keys(update).length);
+	//if(Object.keys(update).length != 0){
+	if(dirty) {
+		console.log("sending: ");
+		var jsonS = JSON.stringify(update, null, 2);
+		update = {};
+		dirty = false;
+		console.log(jsonS);
+		send(jsonS);
+		//console.log(update);
+		//console.log(Object.keys(update).length);
+	} 
+}
+
+
+// Generated classes:
+### html-end
+</script>
+</body>
+</html>
