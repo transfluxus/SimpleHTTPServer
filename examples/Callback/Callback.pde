@@ -38,7 +38,8 @@ void setup() {
 // all callback methods must have these two parametertypes: String,Map<String,String>
 // the map contains the parameters as field-value pairs
 void setbackgroundColors(String uri, HashMap<String, String> parameterMap) {
-  println("uri:", uri, "parameters:", parameterMap); 
+  println("uri:", uri, "parameters:");
+  println(parameterMap); 
   red = int(parameterMap.getOrDefault("r","0"));
   green = int(parameterMap.getOrDefault("g","0"));
   blue = int(parameterMap.getOrDefault("b","0"));
