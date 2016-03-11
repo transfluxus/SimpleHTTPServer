@@ -1,6 +1,7 @@
 package http;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
@@ -9,15 +10,21 @@ import java.util.Map;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
-public abstract class TemplateFileHandler extends SimpleFileHandler {
+public abstract class TemplateFileHandler extends FileHandler {
 
 	private Template template;
 	private Map<String, Object> root = new HashMap<>();
 
 	public TemplateFileHandler(String templateFileName) {
-		super(templateFileName);
+		super();
+		this.fileName = templateFileName;
 		try {
-			SimpleHTTPServer.setupFMConfig(parent.sketchPath()+"/data/");
+			this.file = getFile(templateFileName);
+		} catch (FileNotFoundException e1) {
+			SimpleHTTPServer.logger.warning("Templatefile not found. That's not gonna work");
+		}
+		try {
+			SimpleHTTPServer.setupFMConfig(parent.sketchPath() + "/data/");
 			template = SimpleHTTPServer.freeMarker_configuration.getTemplate(templateFileName);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -25,12 +32,9 @@ public abstract class TemplateFileHandler extends SimpleFileHandler {
 		}
 	}
 
-	// public void addModel(String key, String value) {
-	// root.put(key, value);
-	// }
 
 	abstract public void createMap();
-	
+
 	/**
 	 *
 	 * @param key
@@ -41,9 +45,8 @@ public abstract class TemplateFileHandler extends SimpleFileHandler {
 		root.put(key, value);
 	}
 
-	@Override
 	protected byte[] getResponseBytes() {
-		logger.config("Building page from template: "+fileName);
+		logger.config("Building page from template: " + fileName);
 		createMap();
 		byte[] bytearray = new byte[0];
 		try {

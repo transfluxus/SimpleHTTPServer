@@ -3,14 +3,19 @@ package http;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
 
-public class DynamicResponseHandler extends ExtHttpHandler {
+public class DynamicResponseHandler extends SHTTPSHandler {
 
 	private ResponseBuilder responseBuilder;
 	private String contentType;
+	
+
 
 	public DynamicResponseHandler(ResponseBuilder responseBuilder, String contentType) {
 		this.responseBuilder = responseBuilder;
@@ -44,4 +49,5 @@ public class DynamicResponseHandler extends ExtHttpHandler {
 		// println(sb.toString());
 		return sb.toString();
 	}
+	
 }

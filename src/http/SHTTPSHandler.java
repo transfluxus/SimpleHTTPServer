@@ -1,17 +1,19 @@
 package http;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public abstract class ExtHttpHandler implements HttpHandler {
+public abstract class SHTTPSHandler implements HttpHandler {
 
 	protected HttpExchange exchange;
-
-	protected Logger logger = Logger.getLogger("server");
+	
+	protected void setHttpExchange(HttpExchange exchange) {
+		this.exchange = exchange;
+	}
 	
 	public Map<String, String> queryToMap() {
 		return queryToMap(exchange);
@@ -26,7 +28,7 @@ public abstract class ExtHttpHandler implements HttpHandler {
 	protected Map<String, String> queryToMap(HttpExchange exchange) {
 		return queryToMap(exchange.getRequestURI().getQuery());
 	}
-
+	
 	/**
 	 * returns the url parameters in a map
 	 * 
@@ -48,8 +50,5 @@ public abstract class ExtHttpHandler implements HttpHandler {
 		}
 		return result;
 	}
-
-	protected void setHttpExchange(HttpExchange exchange) {
-		this.exchange = exchange;
-	}
+	
 }

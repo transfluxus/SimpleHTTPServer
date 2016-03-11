@@ -1,6 +1,7 @@
 package http;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
@@ -28,6 +29,8 @@ public class SimpleHTTPServer {
 
 	protected static Logger logger = Logger.getLogger("server");
 
+	public static boolean useIndexHtml = true;
+	
 	static {
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 		logger.getParent().getHandlers()[0].setLevel(Level.FINEST);
@@ -53,7 +56,7 @@ public class SimpleHTTPServer {
 	 */
 	public SimpleHTTPServer(PApplet parent, int port) {
 		SimpleHTTPServer.parent = parent;
-		SimpleFileHandler.parent = parent;
+		FileHandler.parent = parent;
 		if (logger.getLevel() == null) {
 			logger.setLevel(Level.INFO);
 		}
@@ -61,16 +64,22 @@ public class SimpleHTTPServer {
 		// logger.getHandlers()[0].setLevel(Level.FINEST);
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
-			indexFileHandler = new SimpleFileHandler("index.html");
-			createContext("", indexFileHandler);
-			server.start();
-			isRunning = true;
-			logger.info("SimpleHTTPServer running on port " + port);
 		} catch (Exception exc) {
-			logger.severe("Server couldn't start: " + exc.getMessage());
+			logger.severe("Server couldn't be created: " + exc.getMessage());
 			logger.severe("Bye Bye!");
 			System.exit(1);
 		}
+		try {
+			indexFileHandler = new SimpleFileHandler("index.html");
+		} catch (FileNotFoundException e) {
+			logger.warning("You are not providing an index.html. Naughty naughty");
+		}
+		if(useIndexHtml) {
+			createContext("", indexFileHandler);
+		}
+		server.start();
+		isRunning = true;
+		logger.info("SimpleHTTPServer running on port " + port);
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 	}
 
@@ -106,8 +115,73 @@ public class SimpleHTTPServer {
 	 *            file in the data folder to serve
 	 */
 	public void serve(String path, String fileName) {
-		server.createContext("/" + path, new SimpleFileHandler(fileName));
+		try {
+			SimpleFileHandler fileHandler = new SimpleFileHandler(fileName);
+			server.createContext("/" + path, fileHandler);
+			logger.info("Serving: "+fileName +" ");
+		} catch (FileNotFoundException e) {
+			logger.warning(e.getMessage());
+		}
 	}
+
+	public void serveAll(String path) {
+		serveAll(path,parent.sketchPath() + "/data/", true, true);
+	}
+
+	public void serveAll(String path, boolean recursive, boolean ignoreHiddenFiles) {
+		serveAll(path,parent.sketchPath() + "/data/", recursive, ignoreHiddenFiles);
+	}
+	
+	/**
+	 * Creates contexts for all files in the server recursively
+	 * 
+	 * @param folderName
+	 */
+	public void serveAll(String path, String directoyName) {
+		serveAll(path,directoyName, true, true);
+	}
+
+	public void serveAll(String path, String directoyName, boolean recursive, boolean ignoreHiddenFiles) {
+		File folder = new File(directoyName);
+		if(!folder.isDirectory()) {
+			logger.warning("serveAll: "+directoyName +" is not a directory");
+			return;
+		} 
+		File[] files = folder.listFiles();
+		for(File f : files) {
+			if(f.isDirectory()) {
+				if(recursive) {
+					serveAll(path+"/"+f.getName(),f.getAbsolutePath(),recursive,ignoreHiddenFiles);
+				}
+			} else {
+				if(!f.isHidden() || !ignoreHiddenFiles) {
+					serve(path+"/"+f.getName(),f.getAbsolutePath());
+				}
+			}
+		}
+	}
+
+	
+//	private List<File> listFilesRecursive(String folderName) {
+//		List<File> fileList = new ArrayList<File>();
+//		recurseDir(fileList, folderName);
+//		return fileList;
+//	}
+//
+//	void recurseDir(List<File> a, String folderName) {
+//		File file = new File(folderName);
+//		if (file.isDirectory()) {
+//			// If you want to include directories in the list
+//			a.add(file);
+//			File[] subfiles = file.listFiles();
+//			for (int i = 0; i < subfiles.length; i++) {
+//				// Call this function on all files in this directory
+//				recurseDir(a, subfiles[i].getAbsolutePath());
+//			}
+//		} else {
+//			a.add(file);
+//		}
+//	}
 
 	/**
 	 * Makes a file available on the server(html,css or js)
@@ -120,11 +194,17 @@ public class SimpleHTTPServer {
 	 *            name of the function
 	 */
 	public void serve(String path, String fileName, String callbackFunctionName) {
-		Method callbackMethod = getCallbackMethod(callbackFunctionName);
-		SimpleFileHandler handler = new SimpleFileHandler(fileName);
-		if (callbackMethod != null)
-			handler.setCallbackMethod(callbackMethod);
-		server.createContext("/" + path, handler);
+		try {
+			SimpleFileHandler fileHandler = new SimpleFileHandler(fileName);
+			server.createContext("/" + path, fileHandler);
+			logger.info("Serving: "+fileName +" ");
+			Method callbackMethod = getCallbackMethod(callbackFunctionName);
+			if (callbackMethod != null) {
+				fileHandler.setCallbackMethod(callbackMethod);
+			}
+		} catch (FileNotFoundException e) {
+			logger.warning(e.getMessage());
+		}
 	}
 
 	/**
@@ -143,9 +223,9 @@ public class SimpleHTTPServer {
 		if (logger.isLoggable(Level.CONFIG)) {
 			if (handler.getClass() == SimpleFileHandler.class) {
 				logger.config("Serving: " + ((SimpleFileHandler) handler).fileName + " on path: /" + path);
-			} else if(handler.getClass().getSuperclass() == TemplateFileHandler.class) {
+			} else if (handler.getClass().getSuperclass() == TemplateFileHandler.class) {
 				logger.config("Serving template: " + ((TemplateFileHandler) handler).fileName + " on path: /" + path);
-			} else if(handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
+			} else if (handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
 				logger.config("Serving Dynamic response on path: /" + path);
 			}
 		}
