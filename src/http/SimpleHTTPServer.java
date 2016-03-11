@@ -20,6 +20,11 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
 import processing.core.PApplet;
 
+/**
+ * The baseclass. That's the server.
+ * @author raminsoleymani
+ *
+ */
 public class SimpleHTTPServer {
 
 	protected static PApplet parent;
@@ -89,6 +94,9 @@ public class SimpleHTTPServer {
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 	}
 
+	/**
+	 * Starts the server
+	 */
 	public void start() {
 		server.start();
 	}
@@ -166,7 +174,7 @@ public class SimpleHTTPServer {
 	 * 
 	 * @param path
 	 *            the context base-path
-	 * @param folderName
+	 * @param directoyName
 	 *            absolute directory of the files to serve
 	 */
 	public void serveAll(String path, String directoyName) {
@@ -180,7 +188,7 @@ public class SimpleHTTPServer {
 	 * 
 	 * @param path
 	 *            the context base-path
-	 * @param folderName
+	 * @param directoyName
 	 *            absolute directory of the files to serve
 	 * @param recursive
 	 *            recursively include subdirectories
@@ -271,10 +279,18 @@ public class SimpleHTTPServer {
 	}
 
 
+	/**
+	 * Return the PApplet object that contains the server
+	 * @return PApplet object
+	 */
 	public PApplet getParent() {
 		return parent;
 	}
 
+	/**
+	 * return if the server has been started
+	 * @return true if server has been started
+	 */
 	public boolean isRunning() {
 		return isRunning;
 	}
@@ -293,7 +309,7 @@ public class SimpleHTTPServer {
 	}
 
 	/**
-	 * remove the contect given under the passed uri path
+	 * Remove the contect given under the passed uri path
 	 * @param uriPath the path of the context
 	 */
 	public void removeContext(String uriPath) {
@@ -316,6 +332,14 @@ public class SimpleHTTPServer {
 		return Optional.empty();
 	}
 
+	/**
+	 * add a callback function to the context under the given uri path.
+	 * The callback function must be public, of the PApplet object
+	 * and needs to have the parameters:
+	 * (String uri, HashMap<String, String> parameterMap) 
+	 * @param uriPath uri path of the context, which should have the callback
+	 * @param callbackFunctionName name of the callback function
+	 */
 	public void addCallback(String uriPath, String callbackFunctionName) {
 		Optional<HttpContext> context = getContext("/"+uriPath);
 		if(!context.isPresent()) {
@@ -339,6 +363,12 @@ public class SimpleHTTPServer {
 		}
 	}
 
+	/**
+	 * Sets the level of the Logger. Setting this to java.util.logging.Level.INFO
+	 * outputs more information on the created services
+	 * 
+	 * @param level new level for the logger
+	 */
 	public static void setLoggerLevel(Level level) {
 		logger.setLevel(level);
 	}

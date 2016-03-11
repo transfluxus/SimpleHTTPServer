@@ -6,7 +6,7 @@ import java.util.Map;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public abstract class SHTTPSHandler implements HttpHandler {
+abstract class SHTTPSHandler implements HttpHandler {
 
 	protected HttpExchange exchange;
 	

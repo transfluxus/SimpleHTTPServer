@@ -14,12 +14,12 @@ import com.sun.net.httpserver.HttpExchange;
 import processing.core.PApplet;
 
 /**
- * serves as basic class for SimpleFileHandler and TemplateFileHandler
+ * Serves as basic class for SimpleFileHandler and TemplateFileHandler
  * 
  * @author raminsoleymani
  *
  */
-public abstract class FileHandler extends SHTTPSHandler {
+abstract class FileHandler extends SHTTPSHandler {
 
 	protected String fileName;
 	protected File file;

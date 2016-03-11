@@ -10,6 +10,12 @@ import java.util.Map;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
+/**
+ * This abstract class makes use of the apache freemarker library in order
+ * to create pages from templates + models.
+ * @author raminsoleymani
+ *
+ */
 public abstract class TemplateFileHandler extends FileHandler {
 
 	private Template template;

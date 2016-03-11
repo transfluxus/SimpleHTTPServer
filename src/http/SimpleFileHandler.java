@@ -10,7 +10,12 @@ import java.util.Map;
 
 import com.sun.net.httpserver.HttpExchange;
 
-class SimpleFileHandler extends FileHandler {
+/**
+ * Serves as handler to provide static documents.
+ * @author raminsoleymani
+ *
+ */
+public class SimpleFileHandler extends FileHandler {
 
 	private boolean callbackMethodSet;
 	private Method callbackMethod;

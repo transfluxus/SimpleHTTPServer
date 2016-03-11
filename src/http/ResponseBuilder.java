@@ -2,6 +2,11 @@ package http;
 
 import java.util.Map;
 
+/**
+ * Use these abstract class to build Webservices.
+ * @author raminsoleymani
+ *
+ */
 public abstract class ResponseBuilder {
 	
 	protected DynamicResponseHandler parent;

@@ -7,6 +7,13 @@ import java.io.OutputStream;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
+/**
+ * With these handlers you can go wild.
+ * Common use is to provide webservices.
+ * 
+ * @author raminsoleymani
+ *
+ */
 public class DynamicResponseHandler extends SHTTPSHandler {
 
 	private ResponseBuilder responseBuilder;
