@@ -3,12 +3,10 @@ package http;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
-
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
@@ -17,6 +15,7 @@ import processing.core.PApplet;
 
 /**
  * serves as basic class for SimpleFileHandler and TemplateFileHandler
+ * 
  * @author raminsoleymani
  *
  */
@@ -25,26 +24,21 @@ public abstract class FileHandler extends SHTTPSHandler {
 	protected String fileName;
 	protected File file;
 	protected String contentType;
-	
-	protected HttpExchange exchange;
 
 	protected Logger logger = Logger.getLogger("server");
-	
+
 	public static PApplet parent;
-	
+
 	protected FileHandler() {
-		// this is for preventing to have a Try/Catch block for TemplateFileHandler
+		// this is for preventing to have a Try/Catch block for
+		// TemplateFileHandler
 	}
-	
+
 	public FileHandler(String fileName) throws FileNotFoundException {
 		this.fileName = fileName;
 		this.file = getFile(fileName);
 	}
-	
-	protected void setHttpExchange(HttpExchange exchange) {
-		this.exchange = exchange;
-	}
-	
+
 	protected File getFile(String fileName) throws FileNotFoundException {
 		File file = new File(SimpleHTTPServer.parent.sketchPath() + "/data/" + fileName);
 		if (file.exists()) {
@@ -75,18 +69,16 @@ public abstract class FileHandler extends SHTTPSHandler {
 			return "text/html";
 		}
 	}
-	
+
 	abstract protected byte[] getResponseBytes();
-	
+
 	@Override
 	public void handle(HttpExchange exchange) throws IOException {
 		setHttpExchange(exchange);
-		printExchange(exchange);
 		byte[] response = getResponseBytes();
 		if (contentType != null) {
 			Headers headers = exchange.getResponseHeaders();
 			headers.add("Content-Type", contentType);
-			// System.out.println("serving "+fileName +" as " +contentType);
 		}
 		exchange.sendResponseHeaders(200, response.length);
 		OutputStream os = exchange.getResponseBody();
@@ -95,24 +87,24 @@ public abstract class FileHandler extends SHTTPSHandler {
 	}
 
 	protected void printExchange(HttpExchange exchange) {
-		System.out.println("context path: "+exchange.getHttpContext().getPath());
-		System.out.println("protocol: "+exchange.getProtocol());
-		Map attributes = exchange.getHttpContext().getAttributes();
-		System.out.println("# attribtues: "+attributes.size());
-		for(Iterator<String> iter = attributes.keySet().iterator();iter.hasNext();) {
+		System.out.println("context path: " + exchange.getHttpContext().getPath());
+		System.out.println("protocol: " + exchange.getProtocol());
+		Map<String,Object> attributes = exchange.getHttpContext().getAttributes();
+		System.out.println("# attribtues: " + attributes.size());
+		for (Iterator<String> iter = attributes.keySet().iterator(); iter.hasNext();) {
 			String attribute = iter.next();
-			System.out.println(attribute+","+exchange.getAttribute(attribute));
+			System.out.println(attribute + "," + exchange.getAttribute(attribute));
 		}
-		System.out.println("request method: "+exchange.getRequestMethod());
-		System.out.println("response code: "+exchange.getResponseCode());
-		System.out.println("local address: "+exchange.getLocalAddress());
-		System.out.println("principal: "+exchange.getPrincipal());
-		System.out.println("remote address: "+exchange.getRemoteAddress());
-		System.out.println("request headers: "+exchange.getRequestHeaders().size());
-		for(Iterator<String> iter = exchange.getRequestHeaders().keySet().iterator();iter.hasNext();) {
+		System.out.println("request method: " + exchange.getRequestMethod());
+		System.out.println("response code: " + exchange.getResponseCode());
+		System.out.println("local address: " + exchange.getLocalAddress());
+		System.out.println("principal: " + exchange.getPrincipal());
+		System.out.println("remote address: " + exchange.getRemoteAddress());
+		System.out.println("request headers: " + exchange.getRequestHeaders().size());
+		for (Iterator<String> iter = exchange.getRequestHeaders().keySet().iterator(); iter.hasNext();) {
 			String attribute = iter.next();
-			System.out.println(attribute+","+exchange.getAttribute(attribute));
+			System.out.println(attribute + "," + exchange.getAttribute(attribute));
 		}
-		System.out.println("request uri: "+exchange.getRequestURI());
+		System.out.println("request uri: " + exchange.getRequestURI());
 	}
 }

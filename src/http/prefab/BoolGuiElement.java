@@ -1,4 +1,4 @@
-package http.prefab.guiElement;
+package http.prefab;
 
 public class BoolGuiElement extends GuiElement {
 

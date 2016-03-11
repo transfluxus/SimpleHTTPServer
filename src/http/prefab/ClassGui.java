@@ -9,12 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-import http.prefab.guiElement.BangGuiElement;
-import http.prefab.guiElement.BoolGuiElement;
-import http.prefab.guiElement.GuiElement;
-import http.prefab.guiElement.StringListElement;
-import http.prefab.guiElement.ValueGuiElement;
-import http.prefab.guiElement.ValueGuiElement.TYPE;
+import http.prefab.ValueGuiElement.TYPE;
 
 public class ClassGui {
 

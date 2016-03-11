@@ -12,12 +12,11 @@ import com.sun.net.httpserver.HttpExchange;
 
 class SimpleFileHandler extends FileHandler {
 
-
 	private boolean callbackMethodSet;
 	private Method callbackMethod;
 
 	public SimpleFileHandler(String fileName) throws FileNotFoundException {
-		this(fileName,getContentType(fileName));
+		this(fileName, getContentType(fileName));
 	}
 
 	public SimpleFileHandler(String fileName, String contentType) throws FileNotFoundException {
@@ -25,6 +24,7 @@ class SimpleFileHandler extends FileHandler {
 		this.contentType = contentType;
 	}
 
+	@Override
 	protected byte[] getResponseBytes() {
 		byte[] bytearray = new byte[(int) file.length()];
 		try {
@@ -47,10 +47,8 @@ class SimpleFileHandler extends FileHandler {
 	public void handle(HttpExchange exchange) throws IOException {
 		super.handle(exchange);
 		if (callbackMethodSet) {
-			// PApplet.println("callback!");
 			String uri = exchange.getRequestURI().toString();
-			Map<String, String> map = queryToMap(exchange);
-			// PApplet.println("map:",map);
+			Map<String, String> map = super.queryToMap();
 			try {
 				callbackMethod.invoke(parent, new Object[] { uri, map });
 			} catch (IllegalAccessException e) {
@@ -61,5 +59,11 @@ class SimpleFileHandler extends FileHandler {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "SimpleFileHandler: serving: "+fileName +
+				(callbackMethodSet ? " /callback: "+callbackMethod.getName(): "");
 	}
 }

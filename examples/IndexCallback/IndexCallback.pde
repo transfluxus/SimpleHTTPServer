@@ -21,7 +21,7 @@ void setup() {
   size(400, 400);
   server = new SimpleHTTPServer(this); 
   // set the callback function for all calls (that don't have a particular callback method set- see Callback example)
-  server.setIndexCallback("callback");
+  server.addCallback("","callback");
   fill(255);
   textAlign(CENTER, CENTER);
 }

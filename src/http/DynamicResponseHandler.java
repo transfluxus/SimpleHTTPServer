@@ -3,12 +3,9 @@ package http;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 
 public class DynamicResponseHandler extends SHTTPSHandler {
 
@@ -24,15 +21,15 @@ public class DynamicResponseHandler extends SHTTPSHandler {
 	}
 
 	@Override
-	public void handle(HttpExchange t) throws IOException {
+	public void handle(HttpExchange exchange) throws IOException {
 		try {
-			String requestBody = parseRequestBody(t);
-			Headers headers = t.getResponseHeaders();
+			setHttpExchange(exchange);
+			String requestBody = parseRequestBody(exchange);
+			Headers headers = exchange.getResponseHeaders();
 			headers.add("Content-Type", contentType);
-			setHttpExchange(t);
 			byte[] response = responseBuilder.responseBytes(requestBody);
-			t.sendResponseHeaders(200, response.length);
-			OutputStream os = t.getResponseBody();
+			exchange.sendResponseHeaders(200, response.length);
+			OutputStream os = exchange.getResponseBody();
 			os.write(response);
 			os.close();
 		} catch (IOException ioExc) {
@@ -50,4 +47,8 @@ public class DynamicResponseHandler extends SHTTPSHandler {
 		return sb.toString();
 	}
 	
+	@Override
+	public String toString() {
+		return "DynamicResponseHandler: "+contentType;
+	}
 }

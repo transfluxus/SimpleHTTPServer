@@ -5,10 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
@@ -30,7 +34,9 @@ public class SimpleHTTPServer {
 	protected static Logger logger = Logger.getLogger("server");
 
 	public static boolean useIndexHtml = true;
-	
+
+	private List<HttpContext> contextList = new ArrayList<>();
+
 	static {
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 		logger.getParent().getHandlers()[0].setLevel(Level.FINEST);
@@ -58,10 +64,8 @@ public class SimpleHTTPServer {
 		SimpleHTTPServer.parent = parent;
 		FileHandler.parent = parent;
 		if (logger.getLevel() == null) {
-			logger.setLevel(Level.INFO);
+			logger.setLevel(Level.WARNING);
 		}
-
-		// logger.getHandlers()[0].setLevel(Level.FINEST);
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
 		} catch (Exception exc) {
@@ -69,13 +73,15 @@ public class SimpleHTTPServer {
 			logger.severe("Bye Bye!");
 			System.exit(1);
 		}
-		try {
-			indexFileHandler = new SimpleFileHandler("index.html");
-		} catch (FileNotFoundException e) {
-			logger.warning("You are not providing an index.html. Naughty naughty");
-		}
-		if(useIndexHtml) {
-			createContext("", indexFileHandler);
+		if (useIndexHtml) {
+			try {
+				indexFileHandler = new SimpleFileHandler("index.html");
+				createContext("", indexFileHandler);
+			} catch (FileNotFoundException e) {
+				logger.warning("You are not providing an index.html. Naughty naughty."
+						+ System.getProperty("line.separator")
+						+ "You might wanna use 'SimpleHTTPServer.useIndexHtml = false;' before creating this instance");
+			}
 		}
 		server.start();
 		isRunning = true;
@@ -117,71 +123,89 @@ public class SimpleHTTPServer {
 	public void serve(String path, String fileName) {
 		try {
 			SimpleFileHandler fileHandler = new SimpleFileHandler(fileName);
-			server.createContext("/" + path, fileHandler);
-			logger.info("Serving: "+fileName +" ");
+			HttpContext context = server.createContext("/" + path, fileHandler);
+			this.contextList.add(context);
+			logger.info("Serving: " + fileName + " @ " + path);
 		} catch (FileNotFoundException e) {
 			logger.warning(e.getMessage());
 		}
 	}
 
+	/**
+	 * Serve all files in the data folder, recursively, leaving out hidden
+	 * files. Subfolders are also reflected in the context path. e.g. the path
+	 * is "". Some file at data/subDir/x.html will have the path subDir/x.html
+	 * 
+	 * @param path
+	 *            the context base-path
+	 */
 	public void serveAll(String path) {
-		serveAll(path,parent.sketchPath() + "/data/", true, true);
+		serveAll(path, parent.sketchPath() + "/data/", true, true);
 	}
 
-	public void serveAll(String path, boolean recursive, boolean ignoreHiddenFiles) {
-		serveAll(path,parent.sketchPath() + "/data/", recursive, ignoreHiddenFiles);
-	}
-	
 	/**
-	 * Creates contexts for all files in the server recursively
+	 * Serves all files in the data folder. Subfolders are also reflected in the
+	 * context path. e.g. the path is "". Some file at data/subDir/x.html will
+	 * have the path subDir/x.html
 	 * 
+	 * @param path
+	 *            the context base-path
+	 * @param recursive
+	 *            recursively include subdirectories
+	 * @param ignoreHiddenFiles
+	 *            ignore hidden files (starting with . under UNIX)
+	 */
+	public void serveAll(String path, boolean recursive, boolean ignoreHiddenFiles) {
+		serveAll(path, parent.sketchPath() + "/data/", recursive, ignoreHiddenFiles);
+	}
+
+	/**
+	 * Serves all files in the given folder. Subfolders are also reflected in
+	 * the context path. e.g. the path is "". Some file at
+	 * directoyName/subDir/x.html will have the path subDir/x.html
+	 * 
+	 * @param path
+	 *            the context base-path
 	 * @param folderName
+	 *            absolute directory of the files to serve
 	 */
 	public void serveAll(String path, String directoyName) {
-		serveAll(path,directoyName, true, true);
+		serveAll(path, directoyName, true, true);
 	}
 
+	/**
+	 * Serves all files in the given folder. Subfolders are also reflected in
+	 * the context path. e.g. the path is "". Some file at
+	 * directoyName/subDir/x.html will have the path subDir/x.html
+	 * 
+	 * @param path
+	 *            the context base-path
+	 * @param folderName
+	 *            absolute directory of the files to serve
+	 * @param recursive
+	 *            recursively include subdirectories
+	 * @param ignoreHiddenFiles
+	 *            ignore hidden files (starting with . under UNIX)
+	 */
 	public void serveAll(String path, String directoyName, boolean recursive, boolean ignoreHiddenFiles) {
 		File folder = new File(directoyName);
-		if(!folder.isDirectory()) {
-			logger.warning("serveAll: "+directoyName +" is not a directory");
+		if (!folder.isDirectory()) {
+			logger.warning("serveAll: " + directoyName + " is not a directory");
 			return;
-		} 
+		}
 		File[] files = folder.listFiles();
-		for(File f : files) {
-			if(f.isDirectory()) {
-				if(recursive) {
-					serveAll(path+"/"+f.getName(),f.getAbsolutePath(),recursive,ignoreHiddenFiles);
+		for (File f : files) {
+			if (f.isDirectory()) {
+				if (recursive) {
+					serveAll(f.getName() + "/", f.getAbsolutePath(), recursive, ignoreHiddenFiles);
 				}
 			} else {
-				if(!f.isHidden() || !ignoreHiddenFiles) {
-					serve(path+"/"+f.getName(),f.getAbsolutePath());
+				if (!f.isHidden() || !ignoreHiddenFiles) {
+					serve(path + f.getName(), f.getAbsolutePath());
 				}
 			}
 		}
 	}
-
-	
-//	private List<File> listFilesRecursive(String folderName) {
-//		List<File> fileList = new ArrayList<File>();
-//		recurseDir(fileList, folderName);
-//		return fileList;
-//	}
-//
-//	void recurseDir(List<File> a, String folderName) {
-//		File file = new File(folderName);
-//		if (file.isDirectory()) {
-//			// If you want to include directories in the list
-//			a.add(file);
-//			File[] subfiles = file.listFiles();
-//			for (int i = 0; i < subfiles.length; i++) {
-//				// Call this function on all files in this directory
-//				recurseDir(a, subfiles[i].getAbsolutePath());
-//			}
-//		} else {
-//			a.add(file);
-//		}
-//	}
 
 	/**
 	 * Makes a file available on the server(html,css or js)
@@ -196,8 +220,9 @@ public class SimpleHTTPServer {
 	public void serve(String path, String fileName, String callbackFunctionName) {
 		try {
 			SimpleFileHandler fileHandler = new SimpleFileHandler(fileName);
-			server.createContext("/" + path, fileHandler);
-			logger.info("Serving: "+fileName +" ");
+			HttpContext context = server.createContext("/" + path, fileHandler);
+			this.contextList.add(context);
+			logger.info("Serving: " + fileName + " ");
 			Method callbackMethod = getCallbackMethod(callbackFunctionName);
 			if (callbackMethod != null) {
 				fileHandler.setCallbackMethod(callbackMethod);
@@ -219,19 +244,21 @@ public class SimpleHTTPServer {
 	 *            http/HttpHandler.html)
 	 */
 	public void createContext(String path, HttpHandler handler) {
-		server.createContext("/" + path, handler);
-		if (logger.isLoggable(Level.CONFIG)) {
+		HttpContext context = server.createContext("/" + path, handler);
+		this.contextList.add(context);
+		if (logger.isLoggable(Level.INFO)) {
 			if (handler.getClass() == SimpleFileHandler.class) {
-				logger.config("Serving: " + ((SimpleFileHandler) handler).fileName + " on path: /" + path);
+				logger.info("Serving: " + ((SimpleFileHandler) handler).fileName + " on path: /" + path);
 			} else if (handler.getClass().getSuperclass() == TemplateFileHandler.class) {
-				logger.config("Serving template: " + ((TemplateFileHandler) handler).fileName + " on path: /" + path);
-			} else if (handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
-				logger.config("Serving Dynamic response on path: /" + path);
+				logger.info("Serving template: " + ((TemplateFileHandler) handler).fileName + " on path: /" + path);
+			} else if (handler.getClass() == DynamicResponseHandler.class || 
+					handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
+				logger.info("Serving Dynamic response on path: /" + path);
 			}
 		}
 	}
 
-	public Method getCallbackMethod(String callbackFunctionName) {
+	private Method getCallbackMethod(String callbackFunctionName) {
 		Class<? extends PApplet> clazz = parent.getClass();
 		try {
 			Method method = clazz.getDeclaredMethod(callbackFunctionName,
@@ -243,16 +270,6 @@ public class SimpleHTTPServer {
 		return null;
 	}
 
-	public void setIndexCallback(String callbackFunctionName) {
-		Class<? extends PApplet> clazz = parent.getClass();
-		try {
-			Method method = clazz.getDeclaredMethod(callbackFunctionName,
-					new Class<?>[] { String.class, HashMap.class });
-			indexFileHandler.setCallbackMethod(method);
-		} catch (NoSuchMethodException | SecurityException e) {
-			System.err.println("No such Method: " + callbackFunctionName + " in PApplet");
-		}
-	}
 
 	public PApplet getParent() {
 		return parent;
@@ -275,17 +292,62 @@ public class SimpleHTTPServer {
 		}
 	}
 
-	public void removeContext(String path) {
+	/**
+	 * remove the contect given under the passed uri path
+	 * @param uriPath the path of the context
+	 */
+	public void removeContext(String uriPath) {
 		try {
-			server.removeContext("/" + path);
-			logger.config("Removing context for path: /" + path);
+			server.removeContext("/" + uriPath);
+			HttpContext context = getContext(uriPath).get();
+			contextList.remove(context);
+			logger.config("Removing context for path: /" + uriPath);
 		} catch (IllegalArgumentException iaExc) {
 			logger.warning(iaExc.getMessage());
-			logger.warning("Context at path: /" + path + " cannot be removed. Does the path exist?");
+			logger.warning("Context at path: /" + uriPath + " cannot be removed. Does the path exist?");
+		}
+	}
+
+	private Optional<HttpContext> getContext(String uriPath) {
+		for (HttpContext context : contextList) {
+			if(context.getPath().equals(uriPath))
+				return Optional.of(context); 
+		}
+		return Optional.empty();
+	}
+
+	public void addCallback(String uriPath, String callbackFunctionName) {
+		Optional<HttpContext> context = getContext("/"+uriPath);
+		if(!context.isPresent()) {
+			logger.warning("No context given for the path: "+uriPath);
+			return;
+		}
+		HttpHandler handler = context.get().getHandler();
+		if(!handler.getClass().equals(SimpleFileHandler.class)) {
+			logger.warning("The context for path: "+uriPath+ " doesn't provide a SimpleFileHandler. "
+					+ "Other Handler (DynamicResponseHandler,TemplateFileHandler) "
+					+ "have functions that are called when request come in");
+		} else {
+			addCallback((SimpleFileHandler) handler, callbackFunctionName);
+		}
+	}
+
+	private void addCallback(SimpleFileHandler fileHandler, String callbackFunctionName) {
+		Method callbackMethod = getCallbackMethod(callbackFunctionName);
+		if (callbackMethod != null) {
+			fileHandler.setCallbackMethod(callbackMethod);
 		}
 	}
 
 	public static void setLoggerLevel(Level level) {
 		logger.setLevel(level);
+	}
+
+	public void printAllContexts() {
+		for (HttpContext context : contextList) {
+			String path = context.getPath();
+			String contextDescr = context.getHandler().toString();
+			System.out.println(path + " - " + contextDescr);
+		}
 	}
 }

@@ -1,6 +1,5 @@
 package http;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,25 +14,35 @@ public abstract class SHTTPSHandler implements HttpHandler {
 		this.exchange = exchange;
 	}
 	
+	/**
+	 * get the query parameters of the recent exchange as map of fields as keys and values
+	 * e.g. something like ...?user=Pris&age=2 would turn into a map
+	 * "user" : "Pris", "age" : "2" 
+	 * @return map containing all queryparameters
+	 */
 	public Map<String, String> queryToMap() {
-		return queryToMap(exchange);
+		return queryToMap(exchange.getRequestURI().getQuery());
 	}
 
 	/**
-	 * returns the url parameters in a map
+	 * get the query parameters of given HttpExchange as map of fields as keys and values
+	 * e.g. something like ...?user=Pris&age=2 would turn into a map
+	 * "user" : "Pris", "age" : "2" 
 	 * 
-	 * @param query
-	 * @return map
+	 * @param exchange that contains the URI to take the parameters from
+	 * @return map containing all queryparameters
 	 */
-	protected Map<String, String> queryToMap(HttpExchange exchange) {
-		return queryToMap(exchange.getRequestURI().getQuery());
-	}
+//	protected Map<String, String> queryToMap(HttpExchange exchange) {
+//		return queryToMap(exchange);
+//	}
 	
 	/**
-	 * returns the url parameters in a map
+	 * get the query parameters of given HttpExchange as map of fields as keys and values
+	 * e.g. something like ...?user=Pris&age=2 would turn into a map
+	 * "user" : "Pris", "age" : "2" 
 	 * 
-	 * @param query
-	 * @return map
+	 * @param querystring from the URI
+	 * @return map containing all queryparameters
 	 */
 	protected Map<String, String> queryToMap(String query) {
 		Map<String, String> result = new HashMap<String, String>();

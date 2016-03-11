@@ -33,18 +33,28 @@ public abstract class TemplateFileHandler extends FileHandler {
 	}
 
 
+	/** 
+	 * This method should be overwritten in order to create a data model for the template
+	 * by using the the addVariable function
+	 */
 	abstract public void createMap();
 
 	/**
-	 *
-	 * @param key
-	 * @param value
+	 * Use this method to add variables to the data model.
+	 * Template + Model > Result 
+	 * 
+	 * Also check
+	 * http://freemarker.incubator.apache.org/docs/pgui_quickstart_createdatamodel.html
+	 * 
+	 * @param lookupName names in the template
+	 * @param value value the name is replaces with in the template
 	 *            any of String,Number,Boolean,List,Map
 	 */
-	public void addModel(String key, Object value) {
-		root.put(key, value);
+	public void addVariable(String lookupName, Object value) {
+		root.put(lookupName, value);
 	}
 
+	@Override
 	protected byte[] getResponseBytes() {
 		logger.config("Building page from template: " + fileName);
 		createMap();
@@ -59,5 +69,10 @@ public abstract class TemplateFileHandler extends FileHandler {
 			System.err.println("Error creating file from template: " + fileName);
 		}
 		return bytearray;
+	}
+	
+	@Override
+	public String toString() {
+		return "TemplateFileHandler: processing: "+fileName;
 	}
 }
