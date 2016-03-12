@@ -3,10 +3,11 @@
  Two web services: 
  fibonacci, which returns the numbers in the fibonacci series between given 'start' and 'end' values
  http://localhost:8000/fibonacci?start=1&end=100    //note that the order of the parameters does not matter
-
+ 
  squareroot, which returns the square root of the given 'value'
  example usage:  http://localhost:8000/squareroot?value=100
-
+ 
+ example by Geoff Ellis.
  */
 
 import http.*;

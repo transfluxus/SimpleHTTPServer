@@ -25,7 +25,7 @@ abstract class FileHandler extends SHTTPSHandler {
 	protected File file;
 	protected String contentType;
 
-	protected Logger logger = Logger.getLogger("server");
+	protected static Logger logger = Logger.getLogger("server");
 
 	public static PApplet parent;
 
@@ -64,8 +64,8 @@ abstract class FileHandler extends SHTTPSHandler {
 		} else if (fileName.endsWith(".ftl")) {
 			return "text/html";
 		} else {
-			System.out.println(
-					"content type could not be derrived. Better use SimpleFileHandler(String fileName, String contentType)");
+			logger.warning(fileName
+					+ ": content type could not be derived. Better use SimpleFileHandler(String fileName, String contentType)");
 			return "text/html";
 		}
 	}
@@ -89,7 +89,7 @@ abstract class FileHandler extends SHTTPSHandler {
 	protected void printExchange(HttpExchange exchange) {
 		System.out.println("context path: " + exchange.getHttpContext().getPath());
 		System.out.println("protocol: " + exchange.getProtocol());
-		Map<String,Object> attributes = exchange.getHttpContext().getAttributes();
+		Map<String, Object> attributes = exchange.getHttpContext().getAttributes();
 		System.out.println("# attribtues: " + attributes.size());
 		for (Iterator<String> iter = attributes.keySet().iterator(); iter.hasNext();) {
 			String attribute = iter.next();
