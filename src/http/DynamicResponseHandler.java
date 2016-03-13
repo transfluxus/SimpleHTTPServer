@@ -8,8 +8,7 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 
 /**
- * With these handlers you can go wild.
- * Common use is to provide webservices.
+ * With these handlers you can go wild. Common use is to provide webservices.
  * 
  * @author raminsoleymani
  *
@@ -18,9 +17,21 @@ public class DynamicResponseHandler extends SHTTPSHandler {
 
 	private ResponseBuilder responseBuilder;
 	private String contentType;
+
+	enum ContentType {
+		application_json("application/json");
+
+		public final String str;
+
+		private ContentType(final String str) {
+			this.str = str;
+		}
+	}
+
+	public DynamicResponseHandler(ResponseBuilder responseBuilder, ContentType contentType) {
+		this(responseBuilder, contentType.str);
+	}
 	
-
-
 	public DynamicResponseHandler(ResponseBuilder responseBuilder, String contentType) {
 		this.responseBuilder = responseBuilder;
 		this.responseBuilder.parent = this;
@@ -53,9 +64,9 @@ public class DynamicResponseHandler extends SHTTPSHandler {
 		// println(sb.toString());
 		return sb.toString();
 	}
-	
+
 	@Override
 	public String toString() {
-		return "DynamicResponseHandler: "+contentType;
+		return "DynamicResponseHandler: " + contentType;
 	}
 }

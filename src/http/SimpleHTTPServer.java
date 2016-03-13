@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.sun.corba.se.impl.ior.GenericTaggedComponent;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -22,12 +23,13 @@ import processing.core.PApplet;
 
 /**
  * The baseclass. That's the server.
+ * 
  * @author raminsoleymani
  *
  */
 public class SimpleHTTPServer {
 
-	protected static PApplet parent;
+	public static PApplet parent;
 	private HttpServer server;
 
 	SimpleFileHandler indexFileHandler;
@@ -259,11 +261,19 @@ public class SimpleHTTPServer {
 				logger.info("Serving: " + ((SimpleFileHandler) handler).fileName + " on path: /" + path);
 			} else if (handler.getClass().getSuperclass() == TemplateFileHandler.class) {
 				logger.info("Serving template: " + ((TemplateFileHandler) handler).fileName + " on path: /" + path);
-			} else if (handler.getClass() == DynamicResponseHandler.class || 
-					handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
+			} else if (handler.getClass() == DynamicResponseHandler.class
+					|| handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
 				logger.info("Serving Dynamic response on path: /" + path);
 			}
 		}
+	}
+
+	public void createAppContext(String path, ResponseBuilder responseBuilder) {
+		createContext(path, responseBuilder, "application/json");
+	}
+
+	public void createContext(String path, ResponseBuilder responseBuilder, String contentType) {
+		createContext(path, new DynamicResponseHandler(responseBuilder, contentType));
 	}
 
 	private Method getCallbackMethod(String callbackFunctionName) {
@@ -278,9 +288,9 @@ public class SimpleHTTPServer {
 		return null;
 	}
 
-
 	/**
 	 * Return the PApplet object that contains the server
+	 * 
 	 * @return PApplet object
 	 */
 	public PApplet getParent() {
@@ -289,6 +299,7 @@ public class SimpleHTTPServer {
 
 	/**
 	 * return if the server has been started
+	 * 
 	 * @return true if server has been started
 	 */
 	public boolean isRunning() {
@@ -310,12 +321,14 @@ public class SimpleHTTPServer {
 
 	/**
 	 * Remove the contect given under the passed uri path
-	 * @param uriPath the path of the context
+	 * 
+	 * @param uriPath
+	 *            the path of the context
 	 */
 	public void removeContext(String uriPath) {
 		try {
 			server.removeContext("/" + uriPath);
-			HttpContext context = getContext(uriPath).get();
+			HttpContext context = getOptionalContext(uriPath).get();
 			contextList.remove(context);
 			logger.config("Removing context for path: /" + uriPath);
 		} catch (IllegalArgumentException iaExc) {
@@ -324,31 +337,45 @@ public class SimpleHTTPServer {
 		}
 	}
 
-	private Optional<HttpContext> getContext(String uriPath) {
+	private Optional<HttpContext> getOptionalContext(String uriPath) {
 		for (HttpContext context : contextList) {
-			if(context.getPath().equals(uriPath))
-				return Optional.of(context); 
+			if (context.getPath().equals("/"+uriPath))
+				return Optional.of(context);
 		}
 		return Optional.empty();
 	}
 
+	// TODO better exception type
+	public HttpContext getContext(String uriPath) throws FileNotFoundException {
+		// throws
+		Optional<HttpContext> context = getOptionalContext(uriPath);
+		if (context.isPresent()) {
+			return context.get();
+		} else {
+			throw new FileNotFoundException(
+					"context for path: " + uriPath + " does not exist. Check all paths with printAllContexts");
+		}
+	}
+
 	/**
-	 * add a callback function to the context under the given uri path.
-	 * The callback function must be public, of the PApplet object
-	 * and needs to have the parameters:
-	 * (String uri, HashMap<String, String> parameterMap) 
-	 * @param uriPath uri path of the context, which should have the callback
-	 * @param callbackFunctionName name of the callback function
+	 * add a callback function to the context under the given uri path. The
+	 * callback function must be public, of the PApplet object and needs to have
+	 * the parameters: (String uri, HashMap<String, String> parameterMap)
+	 * 
+	 * @param uriPath
+	 *            uri path of the context, which should have the callback
+	 * @param callbackFunctionName
+	 *            name of the callback function
 	 */
 	public void addCallback(String uriPath, String callbackFunctionName) {
-		Optional<HttpContext> context = getContext("/"+uriPath);
-		if(!context.isPresent()) {
-			logger.warning("No context given for the path: "+uriPath);
+		Optional<HttpContext> context = getOptionalContext("/" + uriPath);
+		if (!context.isPresent()) {
+			logger.warning("No context given for the path: " + uriPath);
 			return;
 		}
 		HttpHandler handler = context.get().getHandler();
-		if(!handler.getClass().equals(SimpleFileHandler.class)) {
-			logger.warning("The context for path: "+uriPath+ " doesn't provide a SimpleFileHandler. "
+		if (!handler.getClass().equals(SimpleFileHandler.class)) {
+			logger.warning("The context for path: " + uriPath + " doesn't provide a SimpleFileHandler. "
 					+ "Other Handler (DynamicResponseHandler,TemplateFileHandler) "
 					+ "have functions that are called when request come in");
 		} else {
@@ -364,10 +391,12 @@ public class SimpleHTTPServer {
 	}
 
 	/**
-	 * Sets the level of the Logger. Setting this to java.util.logging.Level.INFO
-	 * outputs more information on the created services
+	 * Sets the level of the Logger. Setting this to
+	 * java.util.logging.Level.INFO outputs more information on the created
+	 * services
 	 * 
-	 * @param level new level for the logger
+	 * @param level
+	 *            new level for the logger
 	 */
 	public static void setLoggerLevel(Level level) {
 		logger.setLevel(level);
@@ -376,6 +405,7 @@ public class SimpleHTTPServer {
 	public void printAllContexts() {
 		for (HttpContext context : contextList) {
 			String path = context.getPath();
+			path = path.substring(1); // remove /
 			String contextDescr = context.getHandler().toString();
 			System.out.println(path + " - " + contextDescr);
 		}
