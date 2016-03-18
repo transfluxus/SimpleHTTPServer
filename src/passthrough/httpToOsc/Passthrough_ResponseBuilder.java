@@ -45,23 +45,75 @@ public class Passthrough_ResponseBuilder extends ResponseBuilder {
 	public Passthrough_ResponseBuilder(String addressPattern) {
 		this.addressPattern = addressPattern;
 	}
+	
+	public Passthrough_ResponseBuilder(String addressPattern, int remote_port) {
+		this.addressPattern = addressPattern;
+		autoSendLocal(remote_port);
+	}
 
-	public void addValPass(String valName, TransmissionType type, OscMsgType oscType, Optional<Object> defaultValue) {
+	public void addValPass(String valName, TransmissionType type, OscMsgType oscType) {
+		addValPass(valName,type,oscType,Optional.empty());
+	}
+	
+	private void addValPass(String valName, TransmissionType type, OscMsgType oscType, Optional<Object> defaultValue) {
 		OSCMessageEntry oscMsg = new OSCMessageEntry(oscType);
 		HttpHandler handler = new HttpHandler(valName, type, oscMsg);
 		msgEntries.add(handler);
 		msgType += oscMsg.getTypeString();
 		msglength++;
 	}
+	
+	/*
+	 *********************
+	 * Some simplifier for Query passes
+	 *********************
+	 */
+	
+	public void addQueryPassInt(String valName) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.i,Optional.empty());
+	}
+	
+	public void addQueryPassInt(String valName, int defaultValue) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.i,Optional.of(defaultValue));
+	}
 
+	public void addQueryPassFloat(String valName) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.f,Optional.empty());
+	}
+
+	public void addQueryPassFloat(String valName, float defaultValue) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.f,Optional.of(defaultValue));
+	}
+
+	public void addQueryPassString(String valName) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.s,Optional.empty());
+	}
+
+	public void addQueryPassString(String valName, String defaultValue) {
+		addValPass(valName,TransmissionType.Query,OscMsgType.s,Optional.of(defaultValue));
+	}
+	
+	/**
+	 * automatically send the incoming request to the localhost and given port
+	 * @param port port of the remote application
+	 */
 	public void autoSendLocal(int port) {
 		autoSend("127.0.0.1", port);
 	}
 
+	/**
+	 * automatically send the incoming request to the given ip address and given port
+	 * @paran ipAddr remote ip address
+	 * @param port port of the application on the remote host
+	 */
 	public void autoSend(String ipAddr, int port) {
 		autoSend(new NetAddress(ipAddr, port));
 	}
 
+	/**
+	 * automatically send the incoming request to the given netaddress
+	 * @param address netaddress that holds the ip address and port
+	 */
 	public void autoSend(NetAddress address) {
 		netAddress = address;
 		autoSend = true;
@@ -75,22 +127,13 @@ public class Passthrough_ResponseBuilder extends ResponseBuilder {
 		}
 	}
 
-	// for getting ip and port from the msg
-	// void addRemoteIPAdapter(String valName, TransmissionType type) {
-	// remoteIPAdapter = Optional.of(new HttpHandler(valName, type, null));
-	// }
-
-	// void addPortAdapter(String valName,TransmissionType type) {
-	// portAdapter = new HttpHandler(valName, type, null);
-	// }
-
 	void removeValPass(int index) {
 		msgType = msgType.substring(0, index) + msgType.substring(index + 1);
 		msglength--;
 	}
 
 	public enum TransmissionType {
-		Query, APP_JSON
+		Query, App_json
 	}
 
 	@Override
