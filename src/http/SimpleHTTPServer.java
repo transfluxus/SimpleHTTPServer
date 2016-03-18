@@ -12,8 +12,9 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.sun.corba.se.impl.ior.GenericTaggedComponent;
+import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
@@ -39,6 +40,7 @@ public class SimpleHTTPServer {
 	public static Configuration freeMarker_configuration;
 
 	protected static Logger logger = Logger.getLogger("server");
+	protected static Logger infoLogger = Logger.getLogger("info");
 
 	public static boolean useIndexHtml = true;
 
@@ -73,6 +75,7 @@ public class SimpleHTTPServer {
 		if (logger.getLevel() == null) {
 			logger.setLevel(Level.WARNING);
 		}
+		infoLogger.setLevel(Level.INFO);
 		try {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
 		} catch (Exception exc) {
@@ -92,7 +95,7 @@ public class SimpleHTTPServer {
 		}
 		server.start();
 		isRunning = true;
-		logger.info("SimpleHTTPServer running on port " + port);
+		infoLogger.info("SimpleHTTPServer running on port " + port);
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
 	}
 
@@ -368,7 +371,7 @@ public class SimpleHTTPServer {
 	 *            name of the callback function
 	 */
 	public void addCallback(String uriPath, String callbackFunctionName) {
-		Optional<HttpContext> context = getOptionalContext("/" + uriPath);
+		Optional<HttpContext> context = getOptionalContext(uriPath);
 		if (!context.isPresent()) {
 			logger.warning("No context given for the path: " + uriPath);
 			return;

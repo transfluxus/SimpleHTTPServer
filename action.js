@@ -2,19 +2,23 @@ var synth
 var minFreq = 220;
 var maxFreq = 440;
 
+var synths = [];
+
 var httpServerPort = 8000;
-var baseAddress = "pass"; 
+var baseAddress = "pass"; //"http://127.0.0.1:"+httpServerPort+"/pass/";
+
 
 function setup() {
- 	createCanvas(640, 480);
+  createCanvas(640, 480);
 }
 
 
 function draw() {
-	background(100);
+	background(200);
 }
 
 function mousePressed() {
+	console.log(synth === undefined)
 	if(synth === undefined) {
 		synth = {"freq": getFreq(mouseX),"amp": getAmp(mouseY)};
 		send("/synth/new",synth);
@@ -31,13 +35,16 @@ function mouseDragged() {
 	send("/synth/update",synth);
 }
 
+function mouseReleased() {
+}
+
 
 function send(addressPattern,json) {
 	httpGet(baseAddress+addressPattern,json,"json",
 	function(args) { // callback
-		console.log("sent: "+args.created);
+		console.log("win: "+args.created);
 	},function(err) {	// error
-		console.log("error: "+err);
+		console.log("loss: "+err);
 	});	
 }
 
