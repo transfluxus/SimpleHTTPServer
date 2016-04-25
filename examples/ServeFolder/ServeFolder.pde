@@ -12,6 +12,8 @@ void setup() {
   server.serveAll("");
   // to add callback to already existing contexts use the addCallback method with the uriPath and the methodname
   server.addCallback("sub/index.html", "sub");
+  // serve file from an absolute 
+  server.serveAll("web/",sketchPath()+"/web");
 }
 
 // all callback methods must have these two parametertypes: String,Map<String,String>
