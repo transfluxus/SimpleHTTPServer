@@ -9,7 +9,7 @@ public class MovingCircle {
 	public int level = 2;
 	public float speed = 0.2f;
 	public boolean red = false;
-	public float y;
+	public int y ;
 	public float x;
 	
 	public MovingCircle(int y) {

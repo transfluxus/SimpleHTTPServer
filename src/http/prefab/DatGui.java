@@ -2,12 +2,13 @@ package http.prefab;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +31,8 @@ import http.SimpleHTTPServer;
 public class DatGui {
 
 	final SimpleHTTPServer server;
-	final URL templateFileLocation;
+	BufferedReader templateReader;
+	BufferedReader datGuiReader;
 
 	List<ClassGui> classGuis = new ArrayList<>();
 	int sendDelay = 100;
@@ -45,9 +47,26 @@ public class DatGui {
 
 	public DatGui(SimpleHTTPServer server) {
 		this.server = server;
-		this.templateFileLocation = DatGui.class.getClassLoader().getResource("http/prefab/templates.txt");
+		templateReader = getReader("data/datgui_html_template.txt");
+		datGuiReader = getReader("data/datgui.js");
 		updateContext = new AutoUpdateContext(server.getParent());
 		logger.getParent().getHandlers()[0].setFormatter(new DatGUILogFormatter());
+	}
+
+	BufferedReader getReader(String file) {
+		BufferedReader reader = null;
+		InputStream s = DatGui.class.getClassLoader().getResourceAsStream(file);
+		if(s == null) {
+			try {
+				reader = new BufferedReader(new FileReader(new File(file)));
+			} catch (FileNotFoundException e) {
+				System.err.println("Template file not found...");
+				System.exit(1);
+			}
+		} else {
+			reader  = new BufferedReader(new InputStreamReader(s));
+		}
+		return reader;
 	}
 
 	/**
@@ -87,34 +106,19 @@ public class DatGui {
 		return id;
 	}
 
-	BufferedReader templateFileReader() {
-		try {
-			return new BufferedReader(new InputStreamReader(templateFileLocation.openStream()));
-		} catch ( IOException e) {
-			System.err.println("Cannot find html template file: " + this.templateFileLocation);
-			System.exit(1);
-			return null;
-		}
-	}
 
 	public String build() {
-		return build("index.html");
+		return build("data/index.html");
 	}
 	
 	public void copyDatGuiJS() {
-		File datgui_Destination = new File(server.getParent().sketchPath()+"/dat.gui.js");
-	/*	if(!datgui_Destination.exists()) {
-			System.out.println(datgui_Destination.getAbsolutePath() + " exists");
-			return;
-		}*/
-		System.out.println("doit");
-		System.out.println("dd");
+		File datgui_Destination = new File(server.getParent().sketchPath()+"/data/dat.gui.js");
 		try {
-			InputStream is =  DatGui.class.getClassLoader().getResourceAsStream("http/prefab/dgjs");
 			FileOutputStream fos = new FileOutputStream(datgui_Destination);
-			for(int r; (r = is.read()) != -1;)
+			for(int r; (r = datGuiReader.read()) != -1;){
 				fos.write(r);
-			is.close();
+			}
+			datGuiReader.close();
 			fos.close();
 			logger.info("Creating dat.gui.js");
 		} catch (IOException e) {
@@ -123,10 +127,9 @@ public class DatGui {
 	}
 	
 	public String build(String fileName) {
-		// boolean completeHTML = server.isPresent();
 		this.builder = new StringBuilder();
 		FileWriter fww = null;
-		String filePath = server.getParent().sketchPath() +"/"+ fileName;
+		String filePath = server.getParent().sketchPath() +"/data/"+ fileName;
 		
 		try {
 			fww = new FileWriter(filePath);
@@ -137,10 +140,6 @@ public class DatGui {
 			System.err.println(filePath);
 			fw = Optional.empty();
 		}
-		System.out.println("B1");
-		BufferedReader templateReader = templateFileReader();
-		// String dNl = nl + nl;
-		// scripts
 
 		boolean htmlFile = fileName.endsWith("html");
 		String templateString;
@@ -158,17 +157,11 @@ public class DatGui {
 					appendToOutput(templateString);
 				}
 			}
-			System.out.println("B2");
-			/*
-			 * while (!templateString.startsWith("### html-end")) {
-			 * builder.append(templateString + nl); }
-			 */
-			// classObjects
+
 			classGuis.stream().forEach(cl -> {
 				String classFunc = cl.buildFunction();
 				appendToOutput(classFunc);
 			});
-			System.out.println("B3");
 			appendToOutput("window.onload = function() {");
 			classGuis.stream().forEach(cl -> appendToOutput(cl.build()));
 			appendToOutput("};");
@@ -181,15 +174,13 @@ public class DatGui {
 			}
 			if (fw.isPresent())
 				fw.get().close();
-
 			if (server.isRunning()) {
 				if (!fileName.equals("index.html")) {
 					server.removeContext("");
 					server.serve(fileName);
 				}
 				copyDatGuiJS();
-				System.out.println("jo");
-				server.serve(server.getParent().sketchPath()+"/dat.gui.js");
+				server.serve(server.getParent().sketchPath()+"/data/dat.gui.js");
 			} else {
 				logger.warning("Server is not running, hence not gonna serve any files");
 			}
@@ -197,15 +188,18 @@ public class DatGui {
 			System.err.println("Error reading template file");
 			System.exit(1);
 		}
-		System.out.println("B4");
-		// adding std-handler to
 		if (server.isRunning()) {
 			DynamicResponseHandler handler = getHandler();
 			server.createContext("datgui", handler);
+			server.removeContext("");
+			server.serve("",fileName);
+			server.serve("dat.gui.js");
 		}
 		return builder.toString();
 	}
 
+
+	
 	public ClassGui getClassGui(Object relObj) {
 		// J7
 		Optional<ClassGui> cg = Optional.empty();

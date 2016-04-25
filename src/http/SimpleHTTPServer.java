@@ -314,10 +314,14 @@ public class SimpleHTTPServer {
 	 */
 	public void removeContext(String uriPath) {
 		try {
+			if(getContext("/" + uriPath).isPresent()) {
 			server.removeContext("/" + uriPath);
-			HttpContext context = getContext(uriPath).get();
+			HttpContext context = getContext("/" + uriPath).get();
 			contextList.remove(context);
 			logger.config("Removing context for path: /" + uriPath);
+			} else {
+				throw new IllegalArgumentException("context doesn't exist");
+			}
 		} catch (IllegalArgumentException iaExc) {
 			logger.warning(iaExc.getMessage());
 			logger.warning("Context at path: /" + uriPath + " cannot be removed. Does the path exist?");

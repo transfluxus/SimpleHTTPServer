@@ -54,7 +54,6 @@ public class Tester extends PApplet {
 		gui.setLogLevel(Level.SEVERE);
 		// gui.add(tc.getClass());
 		gui.build("index.html");
-		server.serve("","index.html");
 	}
 
 	@Override
