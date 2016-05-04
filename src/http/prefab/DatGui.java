@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,21 +31,26 @@ import http.SimpleHTTPServer;
  */
 public class DatGui {
 
-	final SimpleHTTPServer server;
-	BufferedReader templateReader;
-	BufferedReader datGuiReader;
+	private final SimpleHTTPServer server;
+	private BufferedReader templateReader;
+	private BufferedReader datGuiReader;
 
-	List<ClassGui> classGuis = new ArrayList<>();
-	int sendDelay = 100;
+	private List<ClassGui> classGuis = new ArrayList<>();
+	private int sendDelay = 100;
 
 	private AutoUpdateContext updateContext;
 
-	String nl = System.getProperty("line.separator");
-	StringBuilder builder;
-	Optional<FileWriter> fw;
+	private String nl = System.getProperty("line.separator");
+	private StringBuilder builder;
+	private Optional<FileWriter> fw;
 
-	protected static Logger logger = Logger.getLogger("	");
+	protected static Logger logger = Logger.getLogger("datguiLogger");
 
+	/**
+	 * Datgui constructor requires a SimpleHTTPServer
+	 * 
+	 * @param server
+	 */
 	public DatGui(SimpleHTTPServer server) {
 		this.server = server;
 		templateReader = getReader("data/datgui_html_template.txt");
@@ -53,10 +59,19 @@ public class DatGui {
 		logger.getParent().getHandlers()[0].setFormatter(new DatGUILogFormatter());
 	}
 
-	BufferedReader getReader(String file) {
+	/**
+	 * Reader for the templatefile and dat.gui.js library
+	 * 
+	 * @param file
+	 *            file to read from
+	 * @return Bufferedreader to read line by line
+	 */
+	private BufferedReader getReader(String file) {
 		BufferedReader reader = null;
 		InputStream s = DatGui.class.getClassLoader().getResourceAsStream(file);
-		if(s == null) {
+
+		// DatGui.class.getClassLoader()
+		if (s == null) {
 			try {
 				reader = new BufferedReader(new FileReader(new File(file)));
 			} catch (FileNotFoundException e) {
@@ -64,13 +79,14 @@ public class DatGui {
 				System.exit(1);
 			}
 		} else {
-			reader  = new BufferedReader(new InputStreamReader(s));
+			reader = new BufferedReader(new InputStreamReader(s));
 		}
 		return reader;
 	}
 
 	/**
 	 * Add an Object to the gui, which you want to edit in the gui
+	 * 
 	 * @param relatedObject
 	 * @return
 	 */
@@ -82,21 +98,59 @@ public class DatGui {
 	 * Add an Object to the gui, with the specified public fields
 	 * 
 	 * @param relatedObject
-	 * @param fieldNames Array of Fieldnames
+	 * @param fieldNames
+	 *            Array of Fieldnames of public fields
 	 * @return
 	 */
 	public ClassGui add(Object relatedObject, String[] fieldNames) {
-		Class<?> clazz = relatedObject.getClass();
-		int id = getId(clazz);
-		ClassGui cg = new ClassGui(clazz, relatedObject, id);
+		ClassGui cg = createClassGui(relatedObject);
 		for (String fieldName : fieldNames) {
 			cg.addFieldGui(fieldName);
 		}
-		classGuis.add(cg);
-		updateContext.add(relatedObject, cg);
+		registerClassGui(cg);
 		return cg;
 	}
 
+	private void registerClassGui(ClassGui cg) {
+		if (!classGuis.contains(cg)) {
+			classGuis.add(cg);
+			updateContext.add(cg.getRelatedObject(), cg);
+		}
+	}
+
+	public void add(Object relatedObject, String fieldName, float min) {
+		ClassGui cg = createClassGui(relatedObject);
+		cg.addFieldGui(fieldName, min);
+		registerClassGui(cg);
+	}
+	
+	public void add(Object relatedObject, String fieldName, float min, float max) {
+		ClassGui cg = createClassGui(relatedObject);
+		cg.addFieldGui(fieldName, min, max);
+		registerClassGui(cg);
+	}
+	
+	public void addSelector(Object relatedObject,String arrayName, int defaultIndex, String targetFieldName) {
+		ClassGui cg = createClassGui(relatedObject);
+		cg.addSelector(arrayName, defaultIndex, targetFieldName);
+		registerClassGui(cg);
+	}
+
+	private ClassGui createClassGui(Object relatedObject) {
+		ClassGui cg = null;
+		try {
+			cg = getClassGui(relatedObject);
+		} catch (NullPointerException notThere) {
+			Class<?> clazz = relatedObject.getClass();
+			int id = getId(clazz);
+			cg = new ClassGui(clazz, relatedObject, id);
+		}
+		return cg;
+	}
+
+	/**
+	 * Add all public fields of all Classguis added so far
+	 */
 	public void allPublics() {
 		classGuis.stream().forEach(ClassGui::allPublics);
 	}
@@ -106,16 +160,26 @@ public class DatGui {
 		return id;
 	}
 
-
-	public String build() {
-		return build("data/index.html");
+	/**
+	 * Standard build method creates a index.html in the data folder and serves
+	 * it
+	 */
+	public void build() {
+		build("index.html");
 	}
-	
-	public void copyDatGuiJS() {
-		File datgui_Destination = new File(server.getParent().sketchPath()+"/data/dat.gui.js");
+
+	/**
+	 * Java7 method to copy a file... TODO use Files.copy(Path source, Path
+	 * target, CopyOption... options)
+	 */
+	private void copyDatGuiJS() {
+		File datgui_Destination = new File(server.getParent().sketchPath() + "/data/dat.gui.js");
+		// leave it for now, since it needs a separate method to get the stream
+		// only(intead of the reader
+		// Files.copy(datGuiReader, datgui_Destination);
 		try {
 			FileOutputStream fos = new FileOutputStream(datgui_Destination);
-			for(int r; (r = datGuiReader.read()) != -1;){
+			for (int r; (r = datGuiReader.read()) != -1;) {
 				fos.write(r);
 			}
 			datGuiReader.close();
@@ -125,12 +189,18 @@ public class DatGui {
 			e.printStackTrace();
 		}
 	}
-	
-	public String build(String fileName) {
+
+	/**
+	 * Build Gui to a file: tested with html- TODO test js files
+	 * 
+	 * @param fileName
+	 *            file to write to
+	 */
+	public void build(String fileName) {
 		this.builder = new StringBuilder();
 		FileWriter fww = null;
-		String filePath = server.getParent().sketchPath() +"/data/"+ fileName;
-		
+		String filePath = server.getParent().sketchPath() + "/data/" + fileName;
+
 		try {
 			fww = new FileWriter(filePath);
 			fw = Optional.of(fww);
@@ -167,10 +237,10 @@ public class DatGui {
 			appendToOutput("};");
 			appendToOutput("setInterval(autoSend," + sendDelay + ");");
 
-			if(htmlFile) {
-			while ((templateString = templateReader.readLine()) != null) {
-				appendToOutput(templateString);
-			}
+			if (htmlFile) {
+				while ((templateString = templateReader.readLine()) != null) {
+					appendToOutput(templateString);
+				}
 			}
 			if (fw.isPresent())
 				fw.get().close();
@@ -180,7 +250,7 @@ public class DatGui {
 					server.serve(fileName);
 				}
 				copyDatGuiJS();
-				server.serve(server.getParent().sketchPath()+"/data/dat.gui.js");
+				server.serve(server.getParent().sketchPath() + "/data/dat.gui.js");
 			} else {
 				logger.warning("Server is not running, hence not gonna serve any files");
 			}
@@ -192,31 +262,37 @@ public class DatGui {
 			DynamicResponseHandler handler = getHandler();
 			server.createContext("datgui", handler);
 			server.removeContext("");
-			server.serve("",fileName);
+			server.serve("", fileName);
 			server.serve("dat.gui.js");
 		}
-		return builder.toString();
+		// return builder.toString();
 	}
 
-
-	
+	/**
+	 * Get the Classgui for an related Object, that has been added to DatGui
+	 * 
+	 * @param relObj
+	 *            the related Object
+	 * @return the Classgui for that object if present
+	 */
 	public ClassGui getClassGui(Object relObj) {
 		// J7
 		Optional<ClassGui> cg = Optional.empty();
-		for(ClassGui c : classGuis) {
-			if(c.getRelatedObject() == relObj) 
+		for (ClassGui c : classGuis) {
+			if (c.getRelatedObject() == relObj)
 				cg = Optional.of(c);
 		}
 		// J8
-		//Optional<ClassGui> cg = classGuis.stream().filter(c -> c.getRelatedObject() == relObj).findAny();
-		
-		if(!cg.isPresent()) {
+		// Optional<ClassGui> cg = classGuis.stream().filter(c ->
+		// c.getRelatedObject() == relObj).findAny();
+
+		if (!cg.isPresent()) {
 			throw new NullPointerException("Requested Object is not added to the DatGui");
 		} else {
 			return cg.get();
 		}
 	}
-	
+
 	private void appendToOutput(String text) {
 		builder.append(text + nl);
 		if (fw.isPresent()) {
@@ -230,6 +306,7 @@ public class DatGui {
 
 	/**
 	 * Sets the delay
+	 * 
 	 * @param millis
 	 */
 	public void setSendDelay(int millis) {
@@ -239,20 +316,14 @@ public class DatGui {
 	private DynamicResponseHandler getHandler() {
 		return new DynamicResponseHandler(updateContext, "application/json");
 	}
-	
+
 	/*
-	public AutoUpdateContext getUpdateContext() {
-		return updateContext;
-	}
-
-	public void addToHeader(String headerText) {
-		// TODO
-	}
-
-	public void addToBody(String bodyText) {
-		// TODO
-	}
-	*/
+	 * public AutoUpdateContext getUpdateContext() { return updateContext; }
+	 * 
+	 * public void addToHeader(String headerText) { // TODO }
+	 * 
+	 * public void addToBody(String bodyText) { // TODO }
+	 */
 
 	private final class DatGUILogFormatter extends Formatter {
 

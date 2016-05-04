@@ -25,26 +25,30 @@ public class ClassGui {
 
 	private final Object relatedObject;
 	
-	Logger logger;
+	protected static Logger logger = Logger.getLogger("datguiLogger");
 
-	public ClassGui(Class<?> clazz, Object relatedObject, int id) {
+	protected ClassGui(Class<?> clazz, Object relatedObject, int id) {
 		this.clazz = clazz;
 		this.name = clazz.getSimpleName() + id;
 		// System.out.println("CG: "+name);
 		this.relatedObject = relatedObject;
-		logger =  Logger.getLogger("datguiLogger");
 	}
 
+	/**
+	 * add all public fields of the related Class to the Classgui
+	 */
 	public void allPublics() {
 		for (Field field : clazz.getDeclaredFields()) {
 			addFieldGui(field.getName());
 		}
 	}
 
-	public void addFieldGui(String fieldName) {
+	public GuiElement addFieldGui(String fieldName) {
 		Optional<Field> fieldOpt = getField(fieldName);
-		if (!fieldOpt.isPresent())
-			return;
+		if (!fieldOpt.isPresent()) {
+			System.err.println("Field is not available");
+			return null;
+		}
 		Field field = fieldOpt.get();
 		Class<?> type = field.getType();
 		Optional<? extends GuiElement> element = Optional.empty();
@@ -71,19 +75,48 @@ public class ClassGui {
 		}
 		if (element.isPresent()) {
 			guiElements.add(element.get());
+			return element.get();
 		} else {
 			logger.warning("guiElement for field': "+fieldName+"' of class: '"+name+"' could not be created");
+			return null;
+		}
+	}
+	
+	public void addFieldGui(String fieldName,float min) {
+		GuiElement element = addFieldGui(fieldName);
+		if(element == null)
+			return;
+		if(element.getClass().equals(ValueGuiElement.class)) {
+			ValueGuiElement valueGuiElement = (ValueGuiElement) element;
+			valueGuiElement.min(min);
+		} else {
+			logger.warning("Couldn't define min and max of element since the field is not int nor float");
+		}
+	}
+	
+	public void addFieldGui(String fieldName,float min,float max) {
+		GuiElement element = addFieldGui(fieldName);
+		if(element == null)
+			return;
+		if(element.getClass().equals(ValueGuiElement.class)) {
+			ValueGuiElement valueGuiElement = (ValueGuiElement) element;
+			valueGuiElement.min(min);
+			valueGuiElement.max(max);
+		} else {
+			logger.warning("Couldn't define min and max of element since the field is not int nor float");
 		}
 	}
 
 	public void addSelector(String arrayName, int defaultIndex, String targetFieldName) {
 
+		// get the array with options and the type (should be array)
 		Optional<Field> fieldOpt = getField(arrayName);
 		if (!fieldOpt.isPresent())
 			return;
 		Field field = fieldOpt.get();
 		Class<?> type = field.getType();
 
+		// get the targetfield and its type (should be string)
 		Optional<Field> targetFieldOpt = getField(targetFieldName);
 		if (!targetFieldOpt.isPresent())
 			return;
@@ -97,16 +130,15 @@ public class ClassGui {
 			return;
 		}
 
-		
 		try {
-			String[] vals = (String[]) field.get(relatedObject);
+			// set the default value & prepare array for the guiElement and add it
+			String[] vals = ((String[]) field.get(relatedObject)).clone();
 			targetField.set(relatedObject, vals[defaultIndex]);
 			for (int i = 0; i < vals.length; i++) {
 				vals[i] = "'" + vals[i] + "'";
 			}
 			if (vals.length > 0 && vals[0] != null) {
 				String values = Arrays.toString(vals);
-				//element = Optional.of(new StringListElement(arrayName, vals[defaultIndex], values));
 				guiElements.add(new StringListElement(arrayName, vals[defaultIndex], values,targetFieldName));
 			}
 			
