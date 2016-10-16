@@ -61,8 +61,8 @@ public class AutoUpdateContext extends ResponseBuilder {
 					}
 				} else { // function call
 					try {
-						Method fct = updateObject.getClass().getMethod(jsonClazz.getString(fieldName), new Class<?>[]{});
-							fct.invoke(updateObject, new Object[]{});
+						Method method = updateObject.getClass().getMethod(jsonClazz.getString(fieldName), new Class<?>[]{});
+							method.invoke(updateObject, new Object[]{});
 					} catch (NoSuchMethodException | SecurityException e) {
 						System.err.println("No acces to the method: " + fieldName + " of class " + clazzName);
 					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

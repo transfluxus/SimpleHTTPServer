@@ -167,12 +167,12 @@ public class ClassGui {
 		}
 	}
 
-	public void addMethodTrigger(String functionName) {
+	public void addMethodTrigger(String methodName) {
 		try {
-			clazz.getMethod(functionName, new Class<?>[] {});
-			guiElements.add(new BangGuiElement(name, functionName));
+			clazz.getMethod(methodName, new Class<?>[] {});
+			guiElements.add(new BangGuiElement(name, methodName));
 		} catch (NoSuchMethodException | SecurityException e) {
-			System.err.println("Cannot find or acces method: " + functionName + " in class: " + name);
+			System.err.println("Cannot find or acces method: " + methodName + " in class: " + name);
 		}
 	}
 

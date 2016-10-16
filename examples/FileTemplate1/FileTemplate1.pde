@@ -10,7 +10,8 @@
  Map<String, String> params = queryToMap();
  The Apache FreeMarker is very powerfull and I only use simple replacement:
  ${user} in the template is replaced by the query parameter user.
- So localhost:8000/?user=Ramin
+ Use 
+ localhost:8000/?user=Ramin
  returns a page saying "Hello Ramin".
  If the parameter user does not exist in the query it will say: 
  "Hello unknown user"

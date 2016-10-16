@@ -43,6 +43,7 @@ public class DatGui {
 	private String nl = System.getProperty("line.separator");
 	private StringBuilder builder;
 	private Optional<FileWriter> fw;
+	private boolean manualUpdate;
 
 	protected static Logger logger = Logger.getLogger("datguiLogger");
 
@@ -88,7 +89,7 @@ public class DatGui {
 	 * Add an Object to the gui, which you want to edit in the gui
 	 * 
 	 * @param relatedObject
-	 * @return
+	 * @return returns the ClassGui for that Object
 	 */
 	public ClassGui add(Object relatedObject) {
 		return add(relatedObject, new String[] {});
@@ -97,10 +98,10 @@ public class DatGui {
 	/**
 	 * Add an Object to the gui, with the specified public fields
 	 * 
-	 * @param relatedObject
+	 * @param relatedObject the object that should be updated
 	 * @param fieldNames
 	 *            Array of Fieldnames of public fields
-	 * @return
+	 * @return returns the ClassGui for that Object
 	 */
 	public ClassGui add(Object relatedObject, String[] fieldNames) {
 		ClassGui cg = createClassGui(relatedObject);
@@ -118,22 +119,55 @@ public class DatGui {
 		}
 	}
 
-	public void add(Object relatedObject, String fieldName, float min) {
+	/**
+	 * Add a specific field to the gui and sets its minimum value. that field
+	 * must be declared public and must have the type boolean,int or float
+	 * 
+	 * @param relatedObject the object 
+	 * @param fieldName
+	 * @return
+	 */
+	public ClassGui add(Object relatedObject, String fieldName) {
+		ClassGui cg = createClassGui(relatedObject);
+		cg.addFieldGui(fieldName);
+		registerClassGui(cg);
+		return cg;
+	}
+	
+	/**
+	 * Add a specific field to the gui and sets its minimum value. that field
+	 * must be declared public and must have the type int or float.
+	 * 
+	 * @param relatedObject 
+	 * @param fieldName
+	 * @param min
+	 */
+	public ClassGui add(Object relatedObject, String fieldName, float min) {
 		ClassGui cg = createClassGui(relatedObject);
 		cg.addFieldGui(fieldName, min);
 		registerClassGui(cg);
+		return cg;
 	}
-	
-	public void add(Object relatedObject, String fieldName, float min, float max) {
+
+	public ClassGui add(Object relatedObject, String fieldName, float min, float max) {
 		ClassGui cg = createClassGui(relatedObject);
 		cg.addFieldGui(fieldName, min, max);
 		registerClassGui(cg);
+		return cg;
 	}
-	
-	public void addSelector(Object relatedObject,String arrayName, int defaultIndex, String targetFieldName) {
+
+	public ClassGui addSelector(Object relatedObject, String arrayName, int defaultIndex, String targetFieldName) {
 		ClassGui cg = createClassGui(relatedObject);
 		cg.addSelector(arrayName, defaultIndex, targetFieldName);
 		registerClassGui(cg);
+		return cg;
+	}
+
+	public ClassGui addMethodTrigger(Object relatedObject, String methodName) {
+		ClassGui cg = createClassGui(relatedObject);
+		cg.addMethodTrigger(methodName);
+		registerClassGui(cg);
+		return cg;
 	}
 
 	private ClassGui createClassGui(Object relatedObject) {
@@ -311,6 +345,16 @@ public class DatGui {
 	 */
 	public void setSendDelay(int millis) {
 		sendDelay = millis;
+	}
+	
+	/**
+	 * If manualUpdate is set true gui changes are not send to the server automatically (after the set delay)
+	 * but add an update button to update.
+	 * 
+	 * @param manualUpdate
+	 */
+	public void setManualUpdate(boolean manualUpdate) {
+		this.manualUpdate = manualUpdate;
 	}
 
 	private DynamicResponseHandler getHandler() {

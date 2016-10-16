@@ -22,6 +22,7 @@ import processing.core.PApplet;
 
 /**
  * The baseclass. That's the server.
+ * 
  * @author raminsoleymani
  *
  */
@@ -44,7 +45,7 @@ public class SimpleHTTPServer {
 
 	static {
 		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
-		logger.getParent().getHandlers()[0].setLevel(Level.FINEST);
+		// logger.getParent().getHandlers()[0].setLevel(Level.FINEST);
 	}
 
 	/**
@@ -75,8 +76,7 @@ public class SimpleHTTPServer {
 			server = HttpServer.create(new InetSocketAddress(port), 0);
 		} catch (Exception exc) {
 			logger.severe("Server couldn't be created: " + exc.getMessage());
-			logger.severe("Bye Bye!");
-			System.exit(1);
+			return;
 		}
 		if (useIndexHtml) {
 			try {
@@ -90,8 +90,10 @@ public class SimpleHTTPServer {
 		}
 		server.start();
 		isRunning = true;
+		logger.setLevel(Level.INFO);
 		logger.info("SimpleHTTPServer running on port " + port);
-		logger.getParent().getHandlers()[0].setFormatter(new SimpleFormatter());
+		// logger.getParent().getHandlers()[0].setFormatter(new
+		// SimpleFormatter());
 	}
 
 	/**
@@ -252,18 +254,24 @@ public class SimpleHTTPServer {
 	 *            http/HttpHandler.html)
 	 */
 	public void createContext(String path, HttpHandler handler) {
-		HttpContext context = server.createContext("/" + path, handler);
-		this.contextList.add(context);
+		try {
+			HttpContext context = server.createContext("/" + path, handler);
+			this.contextList.add(context);
+		} catch (Exception exc) {
+			logger.warning("Context couldn't be created. Server is probably not running");
+			return;
+		}
 		if (logger.isLoggable(Level.INFO)) {
 			if (handler.getClass() == SimpleFileHandler.class) {
 				logger.info("Serving: " + ((SimpleFileHandler) handler).fileName + " on path: /" + path);
 			} else if (handler.getClass().getSuperclass() == TemplateFileHandler.class) {
 				logger.info("Serving template: " + ((TemplateFileHandler) handler).fileName + " on path: /" + path);
-			} else if (handler.getClass() == DynamicResponseHandler.class || 
-					handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
+			} else if (handler.getClass() == DynamicResponseHandler.class
+					|| handler.getClass().getSuperclass() == DynamicResponseHandler.class) {
 				logger.info("Serving Dynamic response on path: /" + path);
 			}
 		}
+
 	}
 
 	private Method getCallbackMethod(String callbackFunctionName) {
@@ -278,9 +286,9 @@ public class SimpleHTTPServer {
 		return null;
 	}
 
-
 	/**
 	 * Return the PApplet object that contains the server
+	 * 
 	 * @return PApplet object
 	 */
 	public PApplet getParent() {
@@ -289,6 +297,7 @@ public class SimpleHTTPServer {
 
 	/**
 	 * return if the server has been started
+	 * 
 	 * @return true if server has been started
 	 */
 	public boolean isRunning() {
@@ -310,15 +319,17 @@ public class SimpleHTTPServer {
 
 	/**
 	 * Remove the contect given under the passed uri path
-	 * @param uriPath the path of the context
+	 * 
+	 * @param uriPath
+	 *            the path of the context
 	 */
 	public void removeContext(String uriPath) {
 		try {
-			if(getContext("/" + uriPath).isPresent()) {
-			server.removeContext("/" + uriPath);
-			HttpContext context = getContext("/" + uriPath).get();
-			contextList.remove(context);
-			logger.config("Removing context for path: /" + uriPath);
+			if (getContext("/" + uriPath).isPresent()) {
+				server.removeContext("/" + uriPath);
+				HttpContext context = getContext("/" + uriPath).get();
+				contextList.remove(context);
+				logger.config("Removing context for path: /" + uriPath);
 			} else {
 				throw new IllegalArgumentException("context doesn't exist");
 			}
@@ -330,29 +341,31 @@ public class SimpleHTTPServer {
 
 	private Optional<HttpContext> getContext(String uriPath) {
 		for (HttpContext context : contextList) {
-			if(context.getPath().equals(uriPath))
-				return Optional.of(context); 
+			if (context.getPath().equals(uriPath))
+				return Optional.of(context);
 		}
 		return Optional.empty();
 	}
 
 	/**
-	 * add a callback function to the context under the given uri path.
-	 * The callback function must be public, of the PApplet object
-	 * and needs to have the parameters:
-	 * (String uri, HashMap<String, String> parameterMap) 
-	 * @param uriPath uri path of the context, which should have the callback
-	 * @param callbackFunctionName name of the callback function
+	 * add a callback function to the context under the given uri path. The
+	 * callback function must be public, of the PApplet object and needs to have
+	 * the parameters: (String uri, HashMap<String, String> parameterMap)
+	 * 
+	 * @param uriPath
+	 *            uri path of the context, which should have the callback
+	 * @param callbackFunctionName
+	 *            name of the callback function
 	 */
 	public void addCallback(String uriPath, String callbackFunctionName) {
-		Optional<HttpContext> context = getContext("/"+uriPath);
-		if(!context.isPresent()) {
-			logger.warning("No context given for the path: "+uriPath);
+		Optional<HttpContext> context = getContext("/" + uriPath);
+		if (!context.isPresent()) {
+			logger.warning("No context given for the path: " + uriPath);
 			return;
 		}
 		HttpHandler handler = context.get().getHandler();
-		if(!handler.getClass().equals(SimpleFileHandler.class)) {
-			logger.warning("The context for path: "+uriPath+ " doesn't provide a SimpleFileHandler. "
+		if (!handler.getClass().equals(SimpleFileHandler.class)) {
+			logger.warning("The context for path: " + uriPath + " doesn't provide a SimpleFileHandler. "
 					+ "Other Handler (DynamicResponseHandler,TemplateFileHandler) "
 					+ "have functions that are called when request come in");
 		} else {
@@ -368,10 +381,12 @@ public class SimpleHTTPServer {
 	}
 
 	/**
-	 * Sets the level of the Logger. Setting this to java.util.logging.Level.INFO
-	 * outputs more information on the created services
+	 * Sets the level of the Logger. Setting this to
+	 * java.util.logging.Level.INFO outputs more information on the created
+	 * services
 	 * 
-	 * @param level new level for the logger
+	 * @param level
+	 *            new level for the logger
 	 */
 	public static void setLoggerLevel(Level level) {
 		logger.setLevel(level);

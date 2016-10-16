@@ -36,10 +36,12 @@ void draw() {
 void startWebServices() {
   server.setLoggerLevel(java.util.logging.Level.INFO);
   server = new SimpleHTTPServer(this, WEBSERVICE_PORT); //starts service on given port
+
   responder1 = new DynamicResponseHandler(new TextResponse(FIBONACCI), JSON_CONTENT_TYPE);
   responder2 = new DynamicResponseHandler(new TextResponse(SQUARE_ROOT), JSON_CONTENT_TYPE);
   server.createContext("fibonacci", responder1); 
   server.createContext("squareroot", responder2);
+ 
 }
 
 class TextResponse extends ResponseBuilder {
