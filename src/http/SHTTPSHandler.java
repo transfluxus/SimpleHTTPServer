@@ -1,5 +1,8 @@
 package http;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,6 +49,18 @@ abstract class SHTTPSHandler implements HttpHandler {
 	 */
 	protected Map<String, String> queryToMap(String query) {
 		Map<String, String> result = new HashMap<String, String>();
+//		System.out.println(result.toString());
+		InputStreamReader br = new InputStreamReader(exchange.getRequestBody());
+		try {
+			System.out.println("reading");
+			while(br.ready()){
+				System.out.print((char)br.read());
+			}
+			System.out.println("body");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if(query == null)
 			return result;
 		String[] params = query.split("&");
@@ -60,4 +75,7 @@ abstract class SHTTPSHandler implements HttpHandler {
 		return result;
 	}
 	
+	public HttpExchange getExchange(){
+		return exchange;
+	}
 }

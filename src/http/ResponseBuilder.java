@@ -27,4 +27,7 @@ public abstract class ResponseBuilder {
 		return getResponse(requestString).getBytes();
 	}
 	
+	public DynamicResponseHandler getHandler(){
+		return parent;
+	}
 }

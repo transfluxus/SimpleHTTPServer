@@ -46,11 +46,14 @@ public class DynamicResponseHandler extends SHTTPSHandler {
 
 	private String parseRequestBody(HttpExchange t) throws IOException {
 		InputStreamReader reader = new InputStreamReader(t.getRequestBody());
+//		System.out.println("ex:" + t.getHttpContext().getPath());
+//		System.out.println("protocol:" + t.getProtocol());
+//		System.out.println(t.getRequestHeaders().toString());
 		StringBuilder sb = new StringBuilder();
 		while (reader.ready())
 			sb.append((char) reader.read());
 		reader.close();
-		// println(sb.toString());
+//		 System.out.println("body:" + sb.toString());
 		return sb.toString();
 	}
 	

@@ -92,8 +92,6 @@ public class SimpleHTTPServer {
 		isRunning = true;
 		logger.setLevel(Level.INFO);
 		logger.info("SimpleHTTPServer running on port " + port);
-		// logger.getParent().getHandlers()[0].setFormatter(new
-		// SimpleFormatter());
 	}
 
 	/**
